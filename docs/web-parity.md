@@ -9,7 +9,7 @@ Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi v
 | Chủ đề | Web | Di động |
 | ---- | ---- | ---- |
 | Lưu phiên | cookie httpOnly | `expo-secure-store` |
-| Gọi backend | Server Action trên máy chủ Next.js | xem `docs/architecture.md` (chưa quyết định) |
+| Gọi backend | Server Action trên máy chủ Next.js | qua cổng chuyển tiếp mỏng, xem `docs/architecture.md` (cổng chưa xây) |
 | Địa chỉ trang | URL, owner xem `/organizations/<slug>`, người khác xem `/org/<slug>` | Expo Router, cùng cấu trúc đường dẫn |
 | Mã QR điểm danh | hiển thị mã QR do máy chủ vẽ | thêm quét bằng camera (`expo-camera`) |
 | Thông báo | trong app | thêm push (Expo Notifications) khi cần |

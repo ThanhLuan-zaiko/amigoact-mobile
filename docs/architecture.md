@@ -29,7 +29,18 @@ Ba hướng, cần chọn một:
 
 Khuyến nghị: **B** để bắt đầu, vì app có thể dùng chính API backend và web không phải đổi. Bảo vệ thật sự vẫn là JWT và kiểm tra quyền ở backend, khoá nội bộ chỉ ngăn truy cập tuỳ tiện.
 
-Khi chưa chọn, mọi màn hình dựng trên dữ liệu mẫu có kiểu rõ ràng, đặt sau các hàm lấy dữ liệu (`src/lib/*Api.ts`), để sau này chỉ thay một chỗ.
+### Quyết định: hướng B (cổng chuyển tiếp mỏng)
+
+Đã chọn hướng B. App gọi một địa chỉ cổng (`EXPO_PUBLIC_API_URL`, chỉ là địa chỉ, không phải bí mật) thay vì gọi backend trực tiếp. Cổng là dịch vụ riêng, chưa được xây dựng và chưa có repo. Yêu cầu tối thiểu:
+
+- Gắn `X-Internal-Key` vào mọi yêu cầu tới backend. Khoá chỉ nằm trong cấu hình của cổng, không bao giờ nằm trong app.
+- Chỉ chuyển tiếp các đường dẫn nằm trong danh sách cho phép. Mặc định chặn tất cả, và không chuyển tiếp các đường dẫn quản trị hay nội bộ.
+- Giới hạn tốc độ theo IP của máy khách, và chuyển `X-Forwarded-For` đúng cách để backend vẫn giới hạn đúng (xem `--forwarded-allow-ips` ở backend).
+- Chuyển tiếp cả socket `/ws`, vì backend miễn kiểm tra khoá cho socket nhưng kiểm tra `CORS_ORIGINS`. Kiểm tra lại phần Origin của app di động khi làm.
+- Không ghi nội dung yêu cầu, token hay mật khẩu vào log.
+- Phải dùng HTTPS ở môi trường thật.
+
+Trong lúc cổng chưa có, mọi màn hình dựng trên dữ liệu mẫu có kiểu rõ ràng, đặt sau các hàm lấy dữ liệu (`src/lib/*Api.ts`), để khi có cổng chỉ thay một chỗ.
 
 ## Phiên đăng nhập
 

@@ -74,7 +74,8 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 
 - Details are in `docs/architecture.md`. Read it before writing any network code.
 - The backend refuses every HTTP request without `X-Internal-Key`. On the web that key lives only on the Next.js server. **A mobile app is a public client: never put `INTERNAL_API_KEY` in the app, in `EXPO_PUBLIC_*` variables, in `app.json`, or in any bundled file.** Anything bundled can be extracted.
-- Until the access strategy in `docs/architecture.md` is decided and implemented, do not write code that calls the backend directly. Build screens against typed fixtures behind the same data functions that will later call the API, so the swap is one file.
+- Decision: the app reaches the backend through a thin gateway (option B in `docs/architecture.md`) that adds the key, allowlists paths, and rate limits. The app only knows the gateway address from `EXPO_PUBLIC_API_URL` (a URL, not a secret).
+- The gateway does not exist yet. Until it does, do not write code that calls the backend directly. Build screens against typed fixtures behind the data functions (`src/lib/*Api.ts`) that will later call the gateway, so the swap is one file.
 - Tokens are stored only in `expo-secure-store`. Never use `AsyncStorage` or any unencrypted storage for tokens, and never log them.
 - Refresh tokens rotate on every use, and reusing a rotated token ends the session. Serialize refresh calls so two requests never refresh at once, and store the new token before retrying the request.
 - Role and permission gates use `hasPermission(viewer, "module.action")` and `hasModule(viewer, "module")` ported from the web, never `role === "admin"`. The backend checks again.
