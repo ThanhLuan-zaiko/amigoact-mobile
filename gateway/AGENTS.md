@@ -1,10 +1,12 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in `amigoact-gateway`. These rules override default behavior.
+Instructions for AI coding agents working in `amigoact-mobile/gateway/`. These rules override default behavior.
 
 ## What this repo is
 
-A thin gateway between the mobile app and the backend (`../amigoact-be`). The backend refuses every HTTP request without `X-Internal-Key`, and a mobile app is a public client that cannot hold that key. The gateway holds the key, adds it to forwarded requests, and decides what may pass. Details are in `docs/gateway.md`. The decision is recorded in `../amigoact-mobile/docs/architecture.md`.
+A thin gateway between the mobile app and the backend (`../../amigoact-be`). The backend refuses every HTTP request without `X-Internal-Key`, and a mobile app is a public client that cannot hold that key. The gateway holds the key, adds it to forwarded requests, and decides what may pass. Details are in `docs/gateway.md`. The decision is recorded in `../docs/architecture.md`.
+
+This folder lives inside the mobile repo but is a separate package: its own `package.json`, `bun.lock`, `tsconfig.json`, and tests. Run its commands from `gateway/`. It must never import from the app (`../src`), and the app must never import from it. Biome is configured once, in the repo root, and covers both.
 
 The gateway has no business logic. It does not read, change, or store request bodies, tokens, or users. Business rules, permissions, validation, and error codes stay in the backend. If you are about to add logic here that decides what a user may do, put it in the backend instead.
 

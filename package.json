@@ -33,7 +33,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun test src --pass-with-no-tests",
     "doctor": "expo-doctor"
   },
   "private": true,

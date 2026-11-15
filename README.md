@@ -29,6 +29,18 @@ bun run typecheck
 bunx expo-doctor
 ```
 
+## Cổng chuyển tiếp (`gateway/`)
+
+App không gọi backend trực tiếp mà qua cổng trong thư mục `gateway/`, vì backend đòi `X-Internal-Key` mà app không được giữ khoá. Cổng là một server riêng, cài và chạy riêng:
+
+```bash
+cd gateway
+bun install
+bun run dev
+```
+
+Xem [gateway/README.md](gateway/README.md).
+
 ## Tài liệu
 
 - [Kiến trúc và cách gọi backend](docs/architecture.md)

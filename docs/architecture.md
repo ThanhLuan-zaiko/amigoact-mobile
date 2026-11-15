@@ -31,7 +31,7 @@ Khuyến nghị: **B** để bắt đầu, vì app có thể dùng chính API ba
 
 ### Quyết định: hướng B (cổng chuyển tiếp mỏng)
 
-Đã chọn hướng B và đã xây cổng ở repo `../amigoact-gateway` (xem `docs/gateway.md` ở đó). App gọi địa chỉ cổng (`EXPO_PUBLIC_API_URL`, chỉ là địa chỉ, không phải bí mật) thay vì gọi backend trực tiếp. Cổng làm các việc sau:
+Đã chọn hướng B và đã xây cổng trong thư mục `gateway/` của repo này (xem `gateway/docs/gateway.md`). App gọi địa chỉ cổng (`EXPO_PUBLIC_API_URL`, chỉ là địa chỉ, không phải bí mật) thay vì gọi backend trực tiếp. Cổng làm các việc sau:
 
 - Gắn `X-Internal-Key` vào mọi yêu cầu tới backend. Khoá chỉ nằm trong cấu hình của cổng, không bao giờ nằm trong app.
 - Chỉ chuyển tiếp các đường dẫn nằm trong danh sách cho phép. Mặc định chặn tất cả, và không chuyển tiếp các đường dẫn quản trị hay nội bộ.

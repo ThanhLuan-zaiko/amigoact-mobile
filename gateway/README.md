@@ -5,7 +5,7 @@ Cổng chuyển tiếp mỏng giữa app di động và backend. Giữ `INTERNAL
 ## Yêu cầu
 
 - [Bun 1.4.2](https://bun.sh/docs/installation)
-- Backend đang chạy (`../amigoact-be`, mặc định cổng 8100)
+- Backend đang chạy (`../../amigoact-be`, mặc định cổng 8100)
 
 ## Cài đặt và chạy
 
@@ -33,3 +33,4 @@ bun test
 
 - [Cổng làm gì, cấu hình, triển khai](docs/gateway.md)
 - [Quy tắc cho AI agent](AGENTS.md)
+- [Kiến trúc app và quyết định dùng cổng](../docs/architecture.md)
