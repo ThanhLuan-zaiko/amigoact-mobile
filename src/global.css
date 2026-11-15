@@ -1,2 +1,8 @@
 @import "tailwindcss";
 @import "uniwind";
+
+@theme {
+  --font-body: "BeVietnamPro_400Regular";
+  --font-body-medium: "BeVietnamPro_500Medium";
+  --font-body-semibold: "BeVietnamPro_600SemiBold";
+}

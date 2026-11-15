@@ -3,6 +3,7 @@
 export const colors = {
   light: {
     accent: "#0f766e", // teal-700
+    onAccent: "#ffffff", // text and icons on an accent button
     text: "#0f172a", // slate-900
     muted: "#475569", // slate-600
     border: "#e2e8f0", // slate-200
@@ -14,6 +15,7 @@ export const colors = {
   },
   dark: {
     accent: "#2dd4bf", // teal-400
+    onAccent: "#042f2e", // teal-950
     text: "#f1f5f9", // slate-100
     muted: "#94a3b8", // slate-400
     border: "#1e293b", // slate-800
