@@ -24,6 +24,8 @@ function Routes() {
         <Stack.Screen name="register" />
         <Stack.Screen name="forgot-password" />
       </Stack.Protected>
+      {/* Opened from the emailed link, signed in or not. */}
+      <Stack.Screen name="reset-password" />
     </Stack>
   );
 }

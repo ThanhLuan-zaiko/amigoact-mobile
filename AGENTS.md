@@ -91,6 +91,13 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - The gateway has its own gates (see `gateway/AGENTS.md`). When you change it, run them from `gateway/` and also `bun run lint` at the root (Biome covers both).
 - Any change to the gateway error codes or allowed paths updates the app error table and `gateway/docs/gateway.md` in the same change.
 
+## Deep links
+
+- Details are in `docs/deep-links.md`. The app scheme is `amigoact`; Expo Router maps `amigoact://reset-password?token=...` to `src/app/reset-password.tsx` by file name.
+- A screen that a link opens from outside the app (today only `reset-password`) is declared in `src/app/_layout.tsx` outside the `signedIn` and `signedOut` groups. Do not move it into a group.
+- Read a route param with `tokenFromParam` and validate it before use. Never display, log, or report a token from a link.
+- Web-address links (universal links, app links) are added only through `APP_LINK_HOST` in `app.config.ts`. Do not hard-code a domain, and do not put store ids or keys in the repo.
+
 ## Realtime
 
 - The app has one socket, held by one provider at the app root, as on the web (`../amigoact-fe/docs/realtime.md`). Do not open another `WebSocket`.

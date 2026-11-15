@@ -46,5 +46,6 @@ Xem [gateway/README.md](gateway/README.md).
 ## Tài liệu
 
 - [Kiến trúc và cách gọi backend](docs/architecture.md)
+- [Liên kết sâu](docs/deep-links.md)
 - [Đối chiếu từng màn hình với web](docs/web-parity.md)
 - [Quy tắc cho AI agent](AGENTS.md)

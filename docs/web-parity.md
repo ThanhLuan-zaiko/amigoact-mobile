@@ -2,7 +2,7 @@
 
 Web (`../amigoact-fe`) là nguồn của sự thật. Bảng này liệt kê từng màn hình của web và trạng thái bên di động. Cập nhật bảng khi làm xong một màn hình hoặc khi web thêm màn hình mới.
 
-Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập, đăng ký, quên mật khẩu.
+Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu.
 
 ## Khác biệt bắt buộc do nền tảng
 
@@ -25,7 +25,7 @@ Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi v
 | `/login` | xong |
 | `/register` | xong |
 | `/forgot-password` | xong |
-| `/reset-password` | chưa (liên kết trong email mở trang web; cần liên kết sâu vào app mới mở được ở đây) |
+| `/reset-password` | xong, mở bằng `amigoact://reset-password?token=...`. Liên kết trong email vẫn trỏ về web, xem `docs/deep-links.md` |
 | `/verify-email` | chưa |
 | `/account` | chưa |
 | `/account/security` | chưa |
