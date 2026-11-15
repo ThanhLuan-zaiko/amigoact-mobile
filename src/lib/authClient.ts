@@ -25,6 +25,11 @@ export type AuthClient = {
   logout: () => Promise<void>;
   // The signed-in user from stored tokens, or null when there is no session.
   restore: () => Promise<User | null>;
+  // The last known access token, for requests that cannot wait for the
+  // keystore, such as picture sources. Null when signed out.
+  accessToken: () => string | null;
+  // Called when a refresh is refused, so the app can show signed-out screens.
+  onSessionEnded: (listener: () => void) => () => void;
   // Calls the API with the stored token. On 401 it refreshes once and retries.
   authed: <T>(
     path: string,
@@ -32,7 +37,24 @@ export type AuthClient = {
   ) => Promise<ApiResult<T>>;
 };
 
-export function createAuthClient(api: Api, store: TokenStore): AuthClient {
+export function createAuthClient(api: Api, rawStore: TokenStore): AuthClient {
+  let cached: TokenPair | null = null;
+  const listeners = new Set<() => void>();
+  // Every read and write goes through here, so the cached token stays current.
+  const store: TokenStore = {
+    async load() {
+      cached = await rawStore.load();
+      return cached;
+    },
+    async save(tokens) {
+      cached = tokens;
+      await rawStore.save(tokens);
+    },
+    async clear() {
+      cached = null;
+      await rawStore.clear();
+    },
+  };
   // Refresh tokens rotate on every use, and reusing an old one ends the
   // session. So only one refresh runs at a time and every caller waits for it.
   let refreshing: Promise<TokenPair | null> | null = null;
@@ -47,7 +69,10 @@ export function createAuthClient(api: Api, store: TokenStore): AuthClient {
       return result.data;
     }
     // A network failure keeps the session, since the token may still be good.
-    if (result.code !== "network_error") await store.clear();
+    if (result.code !== "network_error") {
+      await store.clear();
+      for (const listener of listeners) listener();
+    }
     return null;
   }
 
@@ -117,6 +142,13 @@ export function createAuthClient(api: Api, store: TokenStore): AuthClient {
     async restore() {
       const result = await authed<User>("/account/me", { method: "GET" });
       return result.ok ? result.data : null;
+    },
+    accessToken: () => cached?.access_token ?? null,
+    onSessionEnded(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
     authed,
   };

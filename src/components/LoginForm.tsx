@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 import type { FormState } from "@/lib/account";
@@ -17,7 +18,7 @@ import {
 
 // The native counterpart of the web LoginForm. The typed input stays when the
 // server rejects it, and a field error is shown under the field.
-export default function LoginForm() {
+export default function LoginForm({ next = "/" }: { next?: string }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +40,7 @@ export default function LoginForm() {
     const result = await auth.login(email.trim(), password);
     if (result.ok) {
       signIn(result.data.user);
+      router.replace(next as never);
       return;
     }
     setState(failureState(result.code, result.issues));

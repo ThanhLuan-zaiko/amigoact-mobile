@@ -8,7 +8,11 @@ export type ApiResult<T> =
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
+  // Multipart uploads. fetch sets the Content-Type with its boundary.
+  form?: FormData;
   token?: string;
+  // Uploads of large videos need longer than the default.
+  timeoutMs?: number;
 };
 
 type ValidationItem = { loc?: unknown[]; type?: unknown };
@@ -46,19 +50,26 @@ export function createApi(
 ): Api {
   async function request<T>(
     path: string,
-    { method = "POST", body, token }: RequestOptions = {},
+    {
+      method = "POST",
+      body,
+      form,
+      token,
+      timeoutMs = TIMEOUT_MS,
+    }: RequestOptions = {},
   ): Promise<ApiResult<T>> {
     const headers: Record<string, string> = { accept: "application/json" };
-    if (body !== undefined) headers["content-type"] = "application/json";
+    if (body !== undefined && !form)
+      headers["content-type"] = "application/json";
     if (token) headers.authorization = `Bearer ${token}`;
     // AbortSignal.timeout is not available in every React Native engine.
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetchImpl(`${baseUrl}${path}`, {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: form ?? (body === undefined ? undefined : JSON.stringify(body)),
         signal: controller.signal,
       });
       const text = await response.text();

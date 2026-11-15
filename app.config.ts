@@ -9,7 +9,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 //
 // Web-address links also need the web app to serve two files, and the app
 // needs its store ids. See docs/deep-links.md.
-const LINK_PATHS = ["/reset-password"];
+const LINK_PATHS = ["/reset-password", "/verify-email", "/checkin"];
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const host = process.env.APP_LINK_HOST?.trim();

@@ -1,7 +1,11 @@
+import { Redirect } from "expo-router";
+import { useAuth } from "@/components/AuthProvider";
 import AuthShell from "@/components/AuthShell";
 import RegisterForm from "@/components/RegisterForm";
 
 export default function RegisterScreen() {
+  const { user } = useAuth();
+  if (user) return <Redirect href="/" />;
   return (
     <AuthShell
       title="Tạo tài khoản"

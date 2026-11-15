@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 import type { FormState } from "@/lib/account";
@@ -62,6 +63,7 @@ export default function RegisterForm() {
     const result = await auth.register(registerPayload(values));
     if (result.ok) {
       signIn(result.data.user);
+      router.replace("/");
       return;
     }
     setState(failureState(result.code, result.issues));
