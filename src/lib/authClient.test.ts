@@ -112,6 +112,24 @@ describe("forgotPassword", () => {
   });
 });
 
+describe("resetPassword", () => {
+  test("posts the token and the new password, stores no tokens", async () => {
+    const store = memoryStore(null);
+    const { api, calls } = scriptedApi(() => ok(null));
+    const result = await createAuthClient(api, store).resetPassword(
+      "tok",
+      "N3w!password",
+    );
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.path).toBe("/auth/password/reset");
+    expect(calls[0]?.options?.body).toEqual({
+      token: "tok",
+      new_password: "N3w!password",
+    });
+    expect(store.value).toBeNull();
+  });
+});
+
 describe("authed refresh", () => {
   test("refreshes once on 401, saves the new pair, then retries", async () => {
     const store = memoryStore(pair(1));

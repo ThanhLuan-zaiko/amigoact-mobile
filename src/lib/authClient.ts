@@ -17,6 +17,11 @@ export type AuthClient = {
   register: (body: RegisterBody) => Promise<ApiResult<AuthResponse>>;
   // Asks for a reset link by email. The answer never says if the email exists.
   forgotPassword: (email: string) => Promise<ApiResult<unknown>>;
+  // Sets a new password with the token from the emailed link.
+  resetPassword: (
+    token: string,
+    newPassword: string,
+  ) => Promise<ApiResult<unknown>>;
   logout: () => Promise<void>;
   // The signed-in user from stored tokens, or null when there is no session.
   restore: () => Promise<User | null>;
@@ -91,6 +96,11 @@ export function createAuthClient(api: Api, store: TokenStore): AuthClient {
     },
     forgotPassword(email) {
       return api.request("/auth/password/forgot", { body: { email } });
+    },
+    resetPassword(token, newPassword) {
+      return api.request("/auth/password/reset", {
+        body: { token, new_password: newPassword },
+      });
     },
     async logout() {
       const tokens = await store.load();
