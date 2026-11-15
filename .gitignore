@@ -1,0 +1,14 @@
+/node_modules
+/coverage
+
+# env files (only .env.example is tracked)
+.env*
+!.env.example
+
+.DS_Store
+Thumbs.db
+*.pem
+*.log
+*.tmp
+*.bak
+*.tsbuildinfo
