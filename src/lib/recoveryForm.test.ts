@@ -1,0 +1,58 @@
+import { describe, expect, test } from "bun:test";
+import { FORGOT_SUCCESS, forgotState, validateForgot } from "./recoveryForm";
+import { FIELD_MESSAGES } from "./validation";
+
+describe("validateForgot", () => {
+  test("accepts an email, trimmed", () => {
+    expect(validateForgot("a@b.vn")).toEqual({});
+    expect(validateForgot("  a@b.vn ")).toEqual({});
+  });
+
+  test("an empty or malformed email is refused", () => {
+    expect(validateForgot("")).toEqual({ email: FIELD_MESSAGES.required });
+    expect(validateForgot("abc")).toEqual({ email: FIELD_MESSAGES.email });
+  });
+});
+
+describe("forgotState", () => {
+  test("success gives the neutral message", () => {
+    expect(forgotState({ ok: true, data: null })).toEqual({
+      success: FORGOT_SUCCESS,
+    });
+  });
+
+  test("regression: the text never confirms or denies an account", () => {
+    expect(FORGOT_SUCCESS.startsWith("Nếu email này đã đăng ký")).toBe(true);
+  });
+
+  test("a rate limit becomes a translated error", () => {
+    const state = forgotState({
+      ok: false,
+      status: 429,
+      code: "rate_limited",
+      issues: [],
+    });
+    expect(state.error).toContain("quá nhiều lần");
+    expect(state.success).toBeUndefined();
+  });
+
+  test("a network failure is translated", () => {
+    const state = forgotState({
+      ok: false,
+      status: 0,
+      code: "network_error",
+      issues: [],
+    });
+    expect(state.error).toBe("Không kết nối được máy chủ. Vui lòng thử lại.");
+  });
+
+  test("a field problem from the server lands on the field", () => {
+    const state = forgotState({
+      ok: false,
+      status: 422,
+      code: "validation_error",
+      issues: [{ field: "email", type: "missing" }],
+    });
+    expect(state.fieldErrors?.email).toBe(FIELD_MESSAGES.required);
+  });
+});

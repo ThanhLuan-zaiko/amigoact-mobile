@@ -15,6 +15,8 @@ export type TokenStore = {
 export type AuthClient = {
   login: (email: string, password: string) => Promise<ApiResult<AuthResponse>>;
   register: (body: RegisterBody) => Promise<ApiResult<AuthResponse>>;
+  // Asks for a reset link by email. The answer never says if the email exists.
+  forgotPassword: (email: string) => Promise<ApiResult<unknown>>;
   logout: () => Promise<void>;
   // The signed-in user from stored tokens, or null when there is no session.
   restore: () => Promise<User | null>;
@@ -86,6 +88,9 @@ export function createAuthClient(api: Api, store: TokenStore): AuthClient {
       // A new account is signed in at once, as on the web.
       if (result.ok) await store.save(result.data.tokens);
       return result;
+    },
+    forgotPassword(email) {
+      return api.request("/auth/password/forgot", { body: { email } });
     },
     async logout() {
       const tokens = await store.load();

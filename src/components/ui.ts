@@ -32,6 +32,9 @@ export const inputFieldInvalid = `${input} border-slate-900 dark:border-slate-10
 export const fieldError =
   "font-body-semibold text-xs text-red-700 dark:text-red-400";
 
+export const successText =
+  "font-body-semibold text-xs text-green-700 dark:text-green-400";
+
 export const primaryButton =
   "h-11 flex-row items-center justify-center gap-2 rounded-md border border-teal-700 bg-teal-700 px-4 active:bg-teal-800 dark:border-teal-400 dark:bg-teal-400 dark:active:bg-teal-300";
 

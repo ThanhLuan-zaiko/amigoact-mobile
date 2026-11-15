@@ -100,6 +100,18 @@ describe("register", () => {
   });
 });
 
+describe("forgotPassword", () => {
+  test("posts the email and stores no tokens", async () => {
+    const store = memoryStore(null);
+    const { api, calls } = scriptedApi(() => ok(null));
+    const result = await createAuthClient(api, store).forgotPassword("a@b.vn");
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.path).toBe("/auth/password/forgot");
+    expect(calls[0]?.options?.body).toEqual({ email: "a@b.vn" });
+    expect(store.value).toBeNull();
+  });
+});
+
 describe("authed refresh", () => {
   test("refreshes once on 401, saves the new pair, then retries", async () => {
     const store = memoryStore(pair(1));

@@ -3,7 +3,13 @@ import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useThemeColors } from "@/hooks/useThemeColors";
 import type { FormState } from "@/lib/account";
-import { fieldError, mutedText, primaryButton, primaryButtonText } from "./ui";
+import {
+  fieldError,
+  mutedText,
+  primaryButton,
+  primaryButtonText,
+  successText,
+} from "./ui";
 
 export function SubmitButton({
   pending,
@@ -37,6 +43,20 @@ export function SubmitButton({
 
 export function FormMessage({ state }: { state: FormState }) {
   const theme = useThemeColors();
+  if (state.success) {
+    return (
+      <View
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+        className="flex-row items-start gap-2 rounded-md border border-green-200 p-3 dark:border-green-900"
+      >
+        <View className="mt-0.5">
+          <Feather name="check-circle" size={16} color={theme.success} />
+        </View>
+        <Text className={`flex-1 text-sm ${successText}`}>{state.success}</Text>
+      </View>
+    );
+  }
   if (!state.error) return null;
   return (
     <View

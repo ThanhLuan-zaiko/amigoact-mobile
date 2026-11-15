@@ -4,6 +4,7 @@ import type { FormState } from "@/lib/account";
 import { auth } from "@/lib/client";
 import { failureState } from "@/lib/forms";
 import { validateLogin } from "@/lib/loginForm";
+import AuthLink from "./AuthLink";
 import { useAuth } from "./AuthProvider";
 import AuthSwitch from "./AuthSwitch";
 import {
@@ -70,6 +71,7 @@ export default function LoginForm() {
         visible={passwordVisible}
         onToggle={() => setPasswordVisible((visible) => !visible)}
       />
+      <AuthLink href="/forgot-password">Quên mật khẩu?</AuthLink>
       <FormMessage state={state} />
       <SubmitButton pending={pending} icon="log-in" onPress={submit}>
         Đăng nhập

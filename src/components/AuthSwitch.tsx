@@ -1,6 +1,6 @@
-import { Link } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import { linkText, mutedText } from "./ui";
+import { Text, View } from "react-native";
+import AuthLink, { type AuthHref } from "./AuthLink";
+import { mutedText } from "./ui";
 
 // "Already have an account? Sign in" under an auth form.
 export default function AuthSwitch({
@@ -10,16 +10,12 @@ export default function AuthSwitch({
 }: {
   question: string;
   action: string;
-  href: "/login" | "/register";
+  href: AuthHref;
 }) {
   return (
     <View className="flex-row flex-wrap items-center gap-1">
       <Text className={mutedText}>{question}</Text>
-      <Link href={href} asChild>
-        <Pressable accessibilityRole="link" className="min-h-11 justify-center">
-          <Text className={linkText}>{action}</Text>
-        </Pressable>
-      </Link>
+      <AuthLink href={href}>{action}</AuthLink>
     </View>
   );
 }
