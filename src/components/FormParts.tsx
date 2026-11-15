@@ -1,22 +1,14 @@
 import { Feather } from "@expo/vector-icons";
-import { type ReactNode, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { useThemeColors } from "@/hooks/useThemeColors";
-import type { FormState } from "@/lib/account";
 import {
   fieldError,
   fieldLabel,
   inputField,
   inputFieldFocused,
   inputFieldInvalid,
-  primaryButton,
-  primaryButtonText,
+  mutedText,
 } from "./ui";
 
 // What a form needs from an input: to move focus to it.
@@ -27,25 +19,50 @@ type FieldProps = {
   value: string;
   onChangeText: (value: string) => void;
   error?: string;
-  autoComplete?: "email" | "current-password";
-  keyboardType?: "default" | "email-address";
+  // Shown under the field while there is no error.
+  hint?: string;
+  // Adds the red asterisk. The legend is RequiredLegend.
+  required?: boolean;
+  maxLength?: number;
+  autoComplete?:
+    | "email"
+    | "current-password"
+    | "new-password"
+    | "name"
+    | "tel"
+    | "organization";
+  autoCapitalize?: "none" | "words";
+  keyboardType?: "default" | "email-address" | "phone-pad" | "number-pad";
   returnKeyType?: "next" | "done";
   onSubmitEditing?: () => void;
   inputRef?: (input: Focusable | null) => void;
 };
 
-function FieldError({ error }: { error?: string }) {
+function FieldNotes({ error, hint }: { error?: string; hint?: string }) {
   const theme = useThemeColors();
-  if (!error) return null;
-  return (
-    <View className="flex-row items-start gap-1">
-      <View className="mt-0.5">
-        <Feather name="alert-circle" size={14} color={theme.error} />
+  if (error) {
+    return (
+      <View className="flex-row items-start gap-1">
+        <View className="mt-0.5">
+          <Feather name="alert-circle" size={14} color={theme.error} />
+        </View>
+        <Text accessibilityRole="alert" className={`flex-1 ${fieldError}`}>
+          {error}
+        </Text>
       </View>
-      <Text accessibilityRole="alert" className={`flex-1 ${fieldError}`}>
-        {error}
-      </Text>
-    </View>
+    );
+  }
+  return hint ? <Text className={`text-xs ${mutedText}`}>{hint}</Text> : null;
+}
+
+function FieldLabel({ label, required }: { label: string; required: boolean }) {
+  return (
+    <Text className={fieldLabel}>
+      {label}
+      {required ? (
+        <Text className="text-red-700 dark:text-red-400"> *</Text>
+      ) : null}
+    </Text>
   );
 }
 
@@ -59,7 +76,11 @@ export function TextField({
   value,
   onChangeText,
   error,
+  hint,
+  required = false,
+  maxLength,
   autoComplete,
+  autoCapitalize = "none",
   keyboardType = "default",
   returnKeyType,
   onSubmitEditing,
@@ -69,7 +90,7 @@ export function TextField({
   const [focused, setFocused] = useState(false);
   return (
     <View className="gap-1">
-      <Text className={fieldLabel}>{label}</Text>
+      <FieldLabel label={label} required={required} />
       <TextInput
         ref={inputRef}
         value={value}
@@ -77,16 +98,18 @@ export function TextField({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         autoComplete={autoComplete}
+        autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
-        autoCapitalize="none"
+        maxLength={maxLength}
         autoCorrect={false}
         returnKeyType={returnKeyType}
         onSubmitEditing={onSubmitEditing}
         placeholderTextColor={theme.muted}
         accessibilityLabel={label}
+        aria-invalid={error ? true : undefined}
         className={fieldClass(error, focused)}
       />
-      <FieldError error={error} />
+      <FieldNotes error={error} hint={hint} />
     </View>
   );
 }
@@ -101,6 +124,8 @@ export function PasswordField({
   value,
   onChangeText,
   error,
+  hint,
+  maxLength,
   autoComplete,
   returnKeyType,
   onSubmitEditing,
@@ -124,10 +149,12 @@ export function PasswordField({
           secureTextEntry={!visible}
           autoCapitalize="none"
           autoCorrect={false}
+          maxLength={maxLength}
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           placeholderTextColor={theme.muted}
           accessibilityLabel={label}
+          aria-invalid={error ? true : undefined}
           className={`${fieldClass(error, focused)} pr-12`}
         />
         <Pressable
@@ -144,53 +171,9 @@ export function PasswordField({
           />
         </Pressable>
       </View>
-      <FieldError error={error} />
+      <FieldNotes error={error} hint={hint} />
     </View>
   );
 }
 
-export function SubmitButton({
-  pending,
-  icon,
-  onPress,
-  children,
-}: {
-  pending: boolean;
-  icon: keyof typeof Feather.glyphMap;
-  onPress: () => void;
-  children: ReactNode;
-}) {
-  const theme = useThemeColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={pending}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: pending, busy: pending }}
-      className={`${primaryButton} ${pending ? "opacity-50" : ""}`}
-    >
-      {pending ? (
-        <ActivityIndicator size="small" color={theme.onAccent} />
-      ) : (
-        <Feather name={icon} size={16} color={theme.onAccent} />
-      )}
-      <Text className={primaryButtonText}>{children}</Text>
-    </Pressable>
-  );
-}
-
-export function FormMessage({ state }: { state: FormState }) {
-  const theme = useThemeColors();
-  if (!state.error) return null;
-  return (
-    <View
-      accessibilityRole="alert"
-      className="flex-row items-start gap-2 rounded-md border border-red-200 p-3 dark:border-red-900"
-    >
-      <View className="mt-0.5">
-        <Feather name="alert-circle" size={16} color={theme.error} />
-      </View>
-      <Text className={`flex-1 text-sm ${fieldError}`}>{state.error}</Text>
-    </View>
-  );
-}
+export { FormMessage, RequiredLegend, SubmitButton } from "./FormChrome";

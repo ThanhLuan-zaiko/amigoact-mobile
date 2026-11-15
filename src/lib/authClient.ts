@@ -1,5 +1,8 @@
 import type { AuthResponse, TokenPair, User } from "./account";
 import type { Api, ApiResult, RequestOptions } from "./api";
+import type { registerPayload } from "./registerForm";
+
+export type RegisterBody = ReturnType<typeof registerPayload>;
 
 // Where tokens are kept. The app uses expo-secure-store (see session.ts);
 // tests use a plain object.
@@ -11,6 +14,7 @@ export type TokenStore = {
 
 export type AuthClient = {
   login: (email: string, password: string) => Promise<ApiResult<AuthResponse>>;
+  register: (body: RegisterBody) => Promise<ApiResult<AuthResponse>>;
   logout: () => Promise<void>;
   // The signed-in user from stored tokens, or null when there is no session.
   restore: () => Promise<User | null>;
@@ -72,6 +76,14 @@ export function createAuthClient(api: Api, store: TokenStore): AuthClient {
       const result = await api.request<AuthResponse>("/auth/login", {
         body: { email, password },
       });
+      if (result.ok) await store.save(result.data.tokens);
+      return result;
+    },
+    async register(body) {
+      const result = await api.request<AuthResponse>("/auth/register", {
+        body,
+      });
+      // A new account is signed in at once, as on the web.
       if (result.ok) await store.save(result.data.tokens);
       return result;
     },

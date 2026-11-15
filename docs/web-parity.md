@@ -2,7 +2,7 @@
 
 Web (`../amigoact-fe`) là nguồn của sự thật. Bảng này liệt kê từng màn hình của web và trạng thái bên di động. Cập nhật bảng khi làm xong một màn hình hoặc khi web thêm màn hình mới.
 
-Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập.
+Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập, đăng ký.
 
 ## Khác biệt bắt buộc do nền tảng
 
@@ -22,8 +22,8 @@ Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi v
 
 | Web | Trạng thái |
 | ---- | ---- |
-| `/login` | xong (chưa có liên kết Quên mật khẩu và Đăng ký, vì hai màn hình đó chưa làm) |
-| `/register` | chưa |
+| `/login` | xong (chưa có liên kết Quên mật khẩu, vì màn hình đó chưa làm) |
+| `/register` | xong |
 | `/forgot-password` | chưa |
 | `/reset-password` | chưa |
 | `/verify-email` | chưa |

@@ -5,6 +5,7 @@ import { auth } from "@/lib/client";
 import { failureState } from "@/lib/forms";
 import { validateLogin } from "@/lib/loginForm";
 import { useAuth } from "./AuthProvider";
+import AuthSwitch from "./AuthSwitch";
 import {
   type Focusable,
   FormMessage,
@@ -73,6 +74,11 @@ export default function LoginForm() {
       <SubmitButton pending={pending} icon="log-in" onPress={submit}>
         Đăng nhập
       </SubmitButton>
+      <AuthSwitch
+        question="Chưa có tài khoản?"
+        action="Đăng ký"
+        href="/register"
+      />
     </View>
   );
 }

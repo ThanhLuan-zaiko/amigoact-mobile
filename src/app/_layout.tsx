@@ -21,6 +21,7 @@ function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={status === "signedOut"}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
       </Stack.Protected>
     </Stack>
   );

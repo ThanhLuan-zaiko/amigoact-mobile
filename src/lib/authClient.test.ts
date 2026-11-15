@@ -70,6 +70,36 @@ describe("login", () => {
   });
 });
 
+describe("register", () => {
+  const body = {
+    email: "a@b.vn",
+    password: "Str0ng!pass",
+    full_name: "A",
+    phone: null,
+    account_type: "individual" as const,
+    company_name: null,
+    tax_code: null,
+  };
+
+  test("posts the body and signs the new account in", async () => {
+    const store = memoryStore(null);
+    const { api, calls } = scriptedApi(() => ok({ user, tokens: pair(1) }));
+    const result = await createAuthClient(api, store).register(body);
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.path).toBe("/auth/register");
+    expect(calls[0]?.options?.body).toEqual(body);
+    expect(store.value).toEqual(pair(1));
+  });
+
+  test("a taken email stores nothing and keeps the code", async () => {
+    const store = memoryStore(null);
+    const { api } = scriptedApi(() => fail(409, "email_taken"));
+    const result = await createAuthClient(api, store).register(body);
+    expect(result).toMatchObject({ ok: false, code: "email_taken" });
+    expect(store.value).toBeNull();
+  });
+});
+
 describe("authed refresh", () => {
   test("refreshes once on 401, saves the new pair, then retries", async () => {
     const store = memoryStore(pair(1));
