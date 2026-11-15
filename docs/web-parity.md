@@ -2,7 +2,7 @@
 
 Web (`../amigoact-fe`) là nguồn của sự thật. Bảng này liệt kê từng màn hình của web và trạng thái bên di động. Cập nhật bảng khi làm xong một màn hình hoặc khi web thêm màn hình mới.
 
-Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Hiện chưa có màn hình nào được chuyển.
+Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập.
 
 ## Khác biệt bắt buộc do nền tảng
 
@@ -13,6 +13,7 @@ Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi v
 | Địa chỉ trang | URL, owner xem `/organizations/<slug>`, người khác xem `/org/<slug>` | Expo Router, cùng cấu trúc đường dẫn |
 | Mã QR điểm danh | hiển thị mã QR do máy chủ vẽ | thêm quét bằng camera (`expo-camera`) |
 | Thông báo | trong app | thêm push (Expo Notifications) khi cần |
+| Icon | `react-icons` (`fi`, cộng `BsQrCode`, `TbPin`, `TbPinnedOff`) | `Feather` của `@expo/vector-icons`; riêng QR và ghim dùng `MaterialCommunityIcons` (`qrcode`, `pin`, `pin-off`) |
 | Bố cục | một cột trên điện thoại, nhiều cột từ `xl` | một cột, `md:` chỉ căn giữa nội dung |
 
 ## Màn hình
@@ -21,7 +22,7 @@ Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi v
 
 | Web | Trạng thái |
 | ---- | ---- |
-| `/login` | chưa |
+| `/login` | xong (chưa có liên kết Quên mật khẩu và Đăng ký, vì hai màn hình đó chưa làm) |
 | `/register` | chưa |
 | `/forgot-password` | chưa |
 | `/reset-password` | chưa |

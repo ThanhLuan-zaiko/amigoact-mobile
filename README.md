@@ -15,6 +15,8 @@
 bun install
 ```
 
+Sao chép `.env.example` thành `.env` và điền `EXPO_PUBLIC_API_URL` bằng địa chỉ cổng (xem bên dưới). Đây chỉ là địa chỉ, không phải bí mật: mọi giá trị `EXPO_PUBLIC_*` đều đọc được trong app.
+
 ```bash
 bun run start
 ```

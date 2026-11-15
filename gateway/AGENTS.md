@@ -69,7 +69,7 @@ bun test                     # tests
 
 ## Quality gates
 
-There is no CI workflow yet. Until one exists, run these locally before you report a change as done, and report the real results. If a gate fails, fix the code. Do not weaken or skip a gate. Never say CI passes without evidence.
+The CI workflow is `../.github/workflows/ci.yml` (one for the whole repo). Run these from `gateway/` before you report a change as done, and report the real results. If a gate fails, fix the code. Do not weaken or skip a gate. Never say CI passes without evidence.
 
 | Gate | Check |
 | ---- | ----- |
@@ -78,6 +78,6 @@ There is no CI workflow yet. Until one exists, run these locally before you repo
 | 03 | Format check (`bunx biome format`) |
 | 04 | Type check (`bun run typecheck`) |
 | 05 | Tests (`bun test`) |
-| 06 | Every `.ts` file is at most 350 lines |
-| 07 | No non-ASCII in `.ts` files |
-| 08 | No junk files tracked, no secrets tracked |
+| 06 | Every `.ts` file is at most 350 lines (CI gate 08) |
+| 07 | No non-ASCII in `.ts` files (CI gate 09) |
+| 08 | No junk files tracked, no secrets tracked (CI gates 10 and 11) |

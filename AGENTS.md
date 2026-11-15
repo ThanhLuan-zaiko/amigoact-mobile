@@ -53,7 +53,7 @@ Metro has to run (or `expo export` has to be run once) after you add a Tailwind 
 
 - Style every element with Tailwind utility classes through `className`, using Uniwind (Tailwind 4). This matches the web rule "Tailwind only".
 - Do not use `StyleSheet.create` and do not use inline `style={{ ... }}`. The only exception is a value that cannot be a class, such as an animated value, or a prop a library only accepts as a style object. Keep these rare and comment why.
-- `src/global.css` holds only `@import "tailwindcss";` and `@import "uniwind";`. Do not add rules.
+- `src/global.css` holds only the two imports and the `@theme` block that maps the three Be Vietnam Pro font families to `font-body`, `font-body-medium`, and `font-body-semibold`. This differs from the web, which loads the font with `next/font`. Do not add other rules.
 - Dark mode follows the system (`userInterfaceStyle: "automatic"`). Write dark styles with the normal `dark:` prefix.
 - Colors that a prop needs as a string (icon `color`, `StatusBar`, navigator options) come from `src/lib/theme.ts`, which holds the exact hex of the Tailwind teal and slate shades used on the web. Do not scatter hex values elsewhere.
 
@@ -67,7 +67,7 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Do not nest cards inside cards. Separate sections with borders and dividers.
 - Corner radius: inputs and buttons `rounded-sm` or `rounded-md`; cards, panels, images, and dialogs `rounded-lg` or `rounded-xl`; `rounded-full` for avatars and dots. Never beyond `rounded-xl`.
 - Font: Be Vietnam Pro, loaded in `src/app/_layout.tsx`. Do not use Inter or the system font for text that the web shows in Be Vietnam Pro.
-- Icons: use `Feather` from `@expo/vector-icons`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
+- Icons: use `Feather` from `@expo/vector-icons`. Three web icons have no Feather twin, so use `MaterialCommunityIcons` from the same package for exactly these: `BsQrCode` is `qrcode`, `TbPin` is `pin`, `TbPinnedOff` is `pin-off`. Do not add other icon sets, and do not draw icons by hand with `react-native-svg`. Icon `color` comes from `useThemeColors`, never from `className`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
 - Touch targets are at least 44 by 44 points. Respect safe areas with `react-native-safe-area-context`. Handle the keyboard on forms, and keep long lists in `FlatList` (not `ScrollView` plus `map`).
 - Every screen handles loading, empty, and error states, the same as the web.
 
@@ -134,17 +134,21 @@ Put scratch work and bundle outputs in the session scratchpad directory, not in 
 
 ## Quality gates
 
-There is no CI workflow in this repo yet. Until one exists, run these locally before you report a change as done, and report the real results. If a gate fails, fix the code. Do not weaken or skip a gate. Never say CI passes without evidence.
+`.github/workflows/ci.yml` runs 14 gates on every push and pull request. They cover the app and `gateway/`. Before you report a change as done, run the gates you can run locally (01 to 10, 13, and 14) and report the real results. If a gate fails, fix the code. Do not weaken or skip a gate. Never say CI passes without evidence. After the user asks you to push, check the run with `gh run list` or `gh pr checks` and report the result.
 
 | Gate | Check |
 | ---- | ----- |
-| 01 | Install with frozen lockfile (`bun install --frozen-lockfile`) |
-| 02 | Lint (`bun run lint`) |
-| 03 | Format check (`bunx biome format`) |
-| 04 | Type check (`bun run typecheck`) |
-| 05 | Bundle builds (`bunx expo export --platform android`) |
+| 01 | Install with frozen lockfile, in the root and in `gateway/` |
+| 02 | Lint (`biome lint`, covers both packages) |
+| 03 | Format check (`biome format`) |
+| 04 | Type check (`tsc --noEmit`), in the root and in `gateway/` |
+| 05 | App bundle builds (`bunx expo export --platform android`) |
 | 06 | Dependencies healthy (`bunx expo-doctor`) |
-| 07 | Tests (`bun test`, once test files exist) |
+| 07 | Tests (`bun run test` in the root, `bun test` in `gateway/`) |
 | 08 | `.ts` files at most 350 lines, `.tsx` files at most 260 lines |
-| 09 | Identifiers are ASCII |
-| 10 | No junk files tracked, no secrets in the bundle |
+| 09 | Identifiers are ASCII, and gateway code has no non-ASCII at all |
+| 10 | No junk files tracked (`node_modules`, `.expo`, `.env`, signing files) |
+| 11 | Secret scan (gitleaks) |
+| 12 | Workflow lint (actionlint) |
+| 13 | Tailwind-only: `src/global.css` holds only the imports and the font theme, no other stylesheet, no `StyleSheet.create`, no inline `style` |
+| 14 | The internal key never reaches the app: no mention in app code, no import from `gateway/`, and the built bundle holds no gateway strings |

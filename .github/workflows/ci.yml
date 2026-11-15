@@ -1,0 +1,232 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# The repo holds two Bun packages: the app (root) and the gateway (gateway/).
+# Gates that install or run code cover both.
+
+jobs:
+  gate-01-frozen-install:
+    name: "Gate 01: install with frozen lockfile"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+        working-directory: gateway
+
+  gate-02-lint:
+    name: "Gate 02: lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bunx biome lint .
+
+  gate-03-format:
+    name: "Gate 03: format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bunx biome format .
+
+  gate-04-type-check:
+    name: "Gate 04: type check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+        working-directory: gateway
+      - run: bunx tsc --noEmit
+      - run: bunx tsc --noEmit
+        working-directory: gateway
+
+  gate-05-bundle:
+    name: "Gate 05: app bundle builds"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bunx expo export --platform android --output-dir "$RUNNER_TEMP/export"
+
+  gate-06-expo-doctor:
+    name: "Gate 06: expo-doctor"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bunx expo-doctor
+
+  gate-07-tests:
+    name: "Gate 07: tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+      - run: bun install --frozen-lockfile
+        working-directory: gateway
+      - run: bun test
+        working-directory: gateway
+
+  gate-08-file-length:
+    name: "Gate 08: .ts at most 350 lines, .tsx at most 260"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check line counts
+        run: |
+          status=0
+          while IFS= read -r file; do
+            case "$file" in
+              src/uniwind-types.d.ts) continue ;;
+              *.tsx) limit=260 ;;
+              *) limit=350 ;;
+            esac
+            lines=$(wc -l < "$file")
+            if [ "$lines" -gt "$limit" ]; then
+              echo "::error file=$file::$lines lines; the limit is $limit"
+              status=1
+            fi
+          done < <(git ls-files -co --exclude-standard -- '*.ts' '*.tsx')
+          exit $status
+
+  gate-09-english-identifiers:
+    name: "Gate 09: English identifiers"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject non-ASCII declaration names
+        run: |
+          mapfile -t files < <(git ls-files -co --exclude-standard -- '*.ts' '*.tsx')
+          if [ "${#files[@]}" -gt 0 ] && grep -nP '\b(const|let|var|function|class|type|interface|enum)\s+[\w$]*[^\x00-\x7F]' "${files[@]}"; then
+            echo "::error::Non-ASCII identifier found. Variable, function, and type names must be in English."
+            exit 1
+          fi
+      - name: Gateway code is ASCII only
+        run: |
+          mapfile -t files < <(git ls-files -co --exclude-standard -- 'gateway/*.ts')
+          if [ "${#files[@]}" -gt 0 ] && grep -nP '[^\x00-\x7F]' "${files[@]}"; then
+            echo "::error::Non-ASCII character in gateway code."
+            exit 1
+          fi
+
+  gate-10-no-junk-files:
+    name: "Gate 10: no junk files tracked"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject junk files
+        run: |
+          junk=$(git ls-files -co --exclude-standard \
+            | grep -E '(^|/)(node_modules|\.expo|dist|ios|android|web-build|coverage)/|(^|/)\.env(\..+)?$|\.log$|(^|/)\.DS_Store$|(^|/)Thumbs\.db$|\.tmp$|\.bak$|\.tsbuildinfo$|\.(jks|p8|p12|key|mobileprovision|pem)$' \
+            | grep -v '\.env\.example$' || true)
+          if [ -n "$junk" ]; then
+            echo "$junk"
+            echo "::error::Junk files are tracked. Remove them from the repository."
+            exit 1
+          fi
+
+  gate-11-secret-scan:
+    name: "Gate 11: secret scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gate-12-workflow-lint:
+    name: "Gate 12: workflow lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker://rhysd/actionlint:1.7.7
+
+  gate-13-tailwind-only:
+    name: "Gate 13: Tailwind-only styling"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject custom stylesheets, StyleSheet and inline styles
+        run: |
+          status=0
+          mapfile -t styles < <(git ls-files -co --exclude-standard | grep -iE '\.(css|scss|sass|less)$')
+          for file in "${styles[@]}"; do
+            if [ "$file" != "src/global.css" ]; then
+              echo "::error file=$file::Only src/global.css may exist. Style with Tailwind classes."
+              status=1
+            fi
+          done
+          if [ -f src/global.css ]; then
+            content=$(grep -v '^\s*$' src/global.css)
+            expected=$(printf '%s\n' '@import "tailwindcss";' '@import "uniwind";' '@theme {' '  --font-body: "BeVietnamPro_400Regular";' '  --font-body-medium: "BeVietnamPro_500Medium";' '  --font-body-semibold: "BeVietnamPro_600SemiBold";' '}')
+            if [ "$content" != "$expected" ]; then
+              echo "::error file=src/global.css::Must hold only the two imports and the font theme block."
+              status=1
+            fi
+          fi
+          mapfile -t sources < <(git ls-files -co --exclude-standard -- 'src/*.tsx' 'src/*.ts')
+          if [ "${#sources[@]}" -gt 0 ] && grep -nP '\sstyle=\{|StyleSheet\.create' "${sources[@]}"; then
+            echo "::error::Inline style props and StyleSheet are not allowed. Use Tailwind classes."
+            status=1
+          fi
+          exit $status
+
+  gate-14-key-stays-out-of-app:
+    name: "Gate 14: the internal key never reaches the app"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - name: App code must not mention the key or import the gateway
+        run: |
+          mapfile -t files < <(git ls-files -co --exclude-standard -- 'src/*' app.json metro.config.js)
+          if grep -niE 'INTERNAL_API_KEY|x-internal-key|from .(\.\./)*gateway' "${files[@]}"; then
+            echo "::error::The app must not hold or mention the internal key, or import from gateway/."
+            exit 1
+          fi
+      - run: bun install --frozen-lockfile
+      - run: bunx expo export --platform android --output-dir "$RUNNER_TEMP/export"
+      - name: The bundle must not contain gateway strings
+        run: |
+          if grep -rIaE 'x-internal-key|Gateway listening on port' "$RUNNER_TEMP/export" ; then
+            echo "::error::Gateway code or the internal key is inside the app bundle."
+            exit 1
+          fi
