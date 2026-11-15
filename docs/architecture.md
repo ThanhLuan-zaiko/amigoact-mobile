@@ -31,34 +31,13 @@ Khuyến nghị: **B** để bắt đầu, vì app có thể dùng chính API ba
 
 ### Quyết định: hướng B (cổng chuyển tiếp mỏng)
 
-Đã chọn hướng B. App gọi một địa chỉ cổng (`EXPO_PUBLIC_API_URL`, chỉ là địa chỉ, không phải bí mật) thay vì gọi backend trực tiếp. Cổng là dịch vụ riêng, chưa được xây dựng và chưa có repo. Yêu cầu tối thiểu:
+Đã chọn hướng B và đã xây cổng ở repo `../amigoact-gateway` (xem `docs/gateway.md` ở đó). App gọi địa chỉ cổng (`EXPO_PUBLIC_API_URL`, chỉ là địa chỉ, không phải bí mật) thay vì gọi backend trực tiếp. Cổng làm các việc sau:
 
 - Gắn `X-Internal-Key` vào mọi yêu cầu tới backend. Khoá chỉ nằm trong cấu hình của cổng, không bao giờ nằm trong app.
 - Chỉ chuyển tiếp các đường dẫn nằm trong danh sách cho phép. Mặc định chặn tất cả, và không chuyển tiếp các đường dẫn quản trị hay nội bộ.
 - Giới hạn tốc độ theo IP của máy khách, và chuyển `X-Forwarded-For` đúng cách để backend vẫn giới hạn đúng (xem `--forwarded-allow-ips` ở backend).
-- Chuyển tiếp cả socket `/ws`, vì backend miễn kiểm tra khoá cho socket nhưng kiểm tra `CORS_ORIGINS`. Kiểm tra lại phần Origin của app di động khi làm.
+- Chuyển tiếp cả socket `/ws`. App di động không gửi `Origin` nên qua được kiểm tra của backend. Cổng từ chối socket của trình duyệt trừ khi origin nằm trong `WS_ORIGINS`. Để backend giới hạn tốc độ đúng IP máy khách, chạy uvicorn với `--forwarded-allow-ips` là địa chỉ của cổng.
 - Không ghi nội dung yêu cầu, token hay mật khẩu vào log.
 - Phải dùng HTTPS ở môi trường thật.
 
-Trong lúc cổng chưa có, mọi màn hình dựng trên dữ liệu mẫu có kiểu rõ ràng, đặt sau các hàm lấy dữ liệu (`src/lib/*Api.ts`), để khi có cổng chỉ thay một chỗ.
-
-## Phiên đăng nhập
-
-- Access token (JWT ngắn hạn) và refresh token chỉ lưu trong `expo-secure-store`.
-- Refresh token xoay vòng sau mỗi lần dùng, dùng lại token cũ sau thời gian ân hạn sẽ kết thúc phiên. Nên chỉ cho một lần làm mới tại một thời điểm và lưu token mới trước khi gọi lại yêu cầu.
-- Mã lỗi API là chuỗi cố định trong `detail`. App dịch sang tiếng Việt bằng cùng bảng với web.
-
-## Thời gian thực
-
-Một socket duy nhất ở gốc app. Lấy vé dùng một lần rồi nối `/ws`, giống web. Nối lại khi app quay về foreground, đóng khi vào nền. Tham khảo `../amigoact-fe/docs/realtime.md` và `../amigoact-be/docs/realtime.md`.
-
-## Cấu trúc thư mục
-
-```
-src/
-  app/          màn hình (Expo Router), đường dẫn giống web
-  components/   thành phần giao diện dùng chung
-  hooks/        hook dùng chung
-  lib/          logic thuần chuyển từ web (kèm test), theme, gọi API
-  global.css    chỉ có hai dòng import
-```
+Khi viết code gọi API, dùng các hàm trong `src/lib/*Api.ts` và địa chỉ từ `EXPO_PUBLIC_API_URL`. Lỗi do cổng sinh ra (`not_found`, `rate_limited`, `payload_too_large`, `upstream_unavailable`, `upstream_timeout`, `too_many_sockets`, `origin_forbidden`) cũng có dạng `{"detail": "<mã>"}`, nên phải có trong bảng dịch lỗi của app. Cổng mới được kiểm thử với backend giả, chưa thử với backend thật.

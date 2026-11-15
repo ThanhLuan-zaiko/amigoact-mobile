@@ -75,7 +75,9 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Details are in `docs/architecture.md`. Read it before writing any network code.
 - The backend refuses every HTTP request without `X-Internal-Key`. On the web that key lives only on the Next.js server. **A mobile app is a public client: never put `INTERNAL_API_KEY` in the app, in `EXPO_PUBLIC_*` variables, in `app.json`, or in any bundled file.** Anything bundled can be extracted.
 - Decision: the app reaches the backend through a thin gateway (option B in `docs/architecture.md`) that adds the key, allowlists paths, and rate limits. The app only knows the gateway address from `EXPO_PUBLIC_API_URL` (a URL, not a secret).
-- The gateway does not exist yet. Until it does, do not write code that calls the backend directly. Build screens against typed fixtures behind the data functions (`src/lib/*Api.ts`) that will later call the gateway, so the swap is one file.
+- The gateway lives in `../amigoact-gateway`. Call the backend only through it, with data functions in `src/lib/*Api.ts` that read `EXPO_PUBLIC_API_URL`. Never call the backend address directly.
+- Gateway error codes (`not_found`, `rate_limited`, `payload_too_large`, `upstream_unavailable`, `upstream_timeout`, `too_many_sockets`, `origin_forbidden`) must be in the app error table with Vietnamese text. On `429`, honor `Retry-After`.
+- A socket that closes with `4401` may mean a bad ticket or an unreachable backend: fetch a fresh ticket and retry once, then treat the session as ended.
 - Tokens are stored only in `expo-secure-store`. Never use `AsyncStorage` or any unencrypted storage for tokens, and never log them.
 - Refresh tokens rotate on every use, and reusing a rotated token ends the session. Serialize refresh calls so two requests never refresh at once, and store the new token before retrying the request.
 - Role and permission gates use `hasPermission(viewer, "module.action")` and `hasModule(viewer, "module")` ported from the web, never `role === "admin"`. The backend checks again.
