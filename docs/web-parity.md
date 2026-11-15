@@ -1,92 +1,117 @@
 # Đối chiếu với web
 
-Web (`../amigoact-fe`) là nguồn của sự thật. Bảng này liệt kê từng màn hình của web và trạng thái bên di động. Cập nhật bảng khi làm xong một màn hình hoặc khi web thêm màn hình mới.
+Web (`../amigoact-fe`) là nguồn của sự thật. Bảng này liệt kê từng màn hình của web và màn hình tương ứng bên di động. Cập nhật bảng khi web thêm hoặc đổi màn hình, và chuyển thay đổi đó sang app trong cùng đợt.
 
-Trạng thái: `chưa` là chưa làm, `xong` là đã chuyển đủ hành vi và chữ hiển thị. Đã chuyển: đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu.
+Trạng thái: `xong` là đã chuyển đủ luồng, trường, kiểm tra, trạng thái rỗng và chữ hiển thị; `chưa` là chưa làm. Hiện **cả 49 màn hình của web đều đã có bản di động**. "Đã chạy" nghĩa là đã qua typecheck, lint, test và build bundle (`expo export`); chưa thử từng màn hình trên máy thật với backend thật.
+
+## Cách chuyển
+
+- Logic thuần trong `../amigoact-fe/src/lib/` được chép nguyên (cùng tên, cùng test) sang `src/lib/`: kiểm tra dữ liệu, định dạng, quyền, realtime, chat, giờ, chứng nhận, bài viết, phân trang.
+- Mỗi Server Action của web có hàm cùng tên trong `src/lib/*Api.ts` hoặc `src/lib/*Actions.ts`, trả về cùng dạng `FormState`. Chỗ web gọi `redirect()` thì hàm trả `next`, màn hình mở địa chỉ đó (`follow`). Chỗ web gọi `revalidatePath` thì hàm gọi `invalidate()` (`src/lib/refreshBus.ts`), mọi màn hình đang mở tải lại dữ liệu.
+- Bộ lọc, trang, thẻ và phòng chat nằm trong tham số địa chỉ (`router.setParams`), giống web giữ chúng trong URL, nên liên kết sâu mở đúng trạng thái.
+- Lớp Tailwind trong `src/components/ui.ts` lấy từ `ui.ts` của web, chỉ thêm lớp chữ riêng vì React Native không kế thừa kiểu chữ.
 
 ## Khác biệt bắt buộc do nền tảng
 
 | Chủ đề | Web | Di động |
 | ---- | ---- | ---- |
 | Lưu phiên | cookie httpOnly | `expo-secure-store` |
-| Gọi backend | Server Action trên máy chủ Next.js | qua cổng chuyển tiếp mỏng, xem `docs/architecture.md` (cổng ở `gateway/`) |
-| Địa chỉ trang | URL, owner xem `/organizations/<slug>`, người khác xem `/org/<slug>` | Expo Router, cùng cấu trúc đường dẫn |
-| Mã QR điểm danh | hiển thị mã QR do máy chủ vẽ | thêm quét bằng camera (`expo-camera`) |
-| Thông báo | trong app | thêm push (Expo Notifications) khi cần |
+| Gọi backend | Server Action trên máy chủ Next.js | qua cổng chuyển tiếp mỏng (`gateway/`), xem `docs/architecture.md` |
+| Địa chỉ tổ chức | chủ sở hữu xem `/organizations/<slug>`, người khác `/org/<slug>` | một địa chỉ `/org/<slug>` cho mọi người; liên kết `/organizations/<slug>/...` được chuyển hướng. Điện thoại không có thanh địa chỉ nên không cần hai dạng |
+| Thanh bên (SideNav) và tổ chức đã tham gia | cột trái từ `md` | trên điện thoại web cũng ẩn cột này. App đưa nội dung của nó vào menu tài khoản (nút hình người trên header) để vẫn tới được Giờ, Chứng nhận, Tổ chức của tôi |
+| Cột phải trang chủ (RightRail) | hiện từ `lg` | hiện khi màn hình rộng từ 1024 điểm (máy tính bảng ngang), giống web; điện thoại không hiện |
+| Bố cục nhiều cột từ `xl` | hai, ba cột | một cột theo thứ tự của web trên điện thoại; `md:` chỉ căn giữa nội dung |
+| Menu thả xuống, hộp thoại | `details`, `dialog` | `Sheet` trượt từ dưới lên và `Modal`, phân tách bằng viền, không bóng |
+| Ô chọn ngày giờ | `input type="date"` / `datetime-local` | bộ chọn ngày giờ gốc của hệ điều hành; giá trị vẫn là chuỗi giờ Việt Nam như web (`toLocalInput`, `fromLocalInput`) |
+| Chọn tệp | `input type="file"`, kéo thả, dán ảnh | thư viện ảnh (`expo-image-picker`); không có kéo thả hay dán |
+| Tiến độ tải lên trong chat | phần trăm qua XHR | vòng xoay, vì `fetch` của React Native không báo tiến độ |
+| Video | hls.js hoặc HLS của trình duyệt, MP4 dự phòng | `expo-video` phát HLS và MP4 trực tiếp |
+| Biểu đồ giờ | canvas | `react-native-svg`, cùng hình học `chartGeometry.ts`; chạm vào cột để xem số |
+| Mã QR điểm danh | máy chủ vẽ SVG | app vẽ bằng `qrcode` và `react-native-svg`, cùng địa chỉ `/checkin?token=` (`EXPO_PUBLIC_APP_URL`) |
+| Điểm danh | camera điện thoại mở trang web | thêm máy quét QR trong app (`expo-camera`), vẫn cần một lần bấm "Điểm danh" như web; nhập mã tay giữ nguyên |
+| In chứng nhận | `window.print()` và tải PDF | mở PDF trong trình xem của máy (in, chia sẻ từ đó); không có nút In riêng |
+| Tải tệp chat | thẻ `a download` | mở tệp trong trình duyệt của máy |
+| Phân trang bài viết (con trỏ) | "Xem bài cũ hơn" mở trang mới | "Xem bài cũ hơn" nối bài cũ vào cuối danh sách |
+| Kéo để làm mới | tải lại trang | kéo xuống ở mỗi màn hình |
+| Giao diện sáng/tối | nút trên header, lưu `localStorage` | nút trên header, lưu trong `expo-secure-store`; chưa chọn thì theo hệ thống |
+| Thông báo đẩy | không có | chưa có (Expo Notifications khi cần) |
 | Icon | `react-icons` (`fi`, cộng `BsQrCode`, `TbPin`, `TbPinnedOff`) | `Feather` của `@expo/vector-icons`; riêng QR và ghim dùng `MaterialCommunityIcons` (`qrcode`, `pin`, `pin-off`) |
-| Bố cục | một cột trên điện thoại, nhiều cột từ `xl` | một cột, `md:` chỉ căn giữa nội dung |
+| Hình dạng ảnh theo kích thước gốc | `width`/`height` của `img` | lớp `aspect-[...]` gần nhất trong `src/lib/aspectClasses.ts`, vì không được dùng `style` |
 
 ## Màn hình
 
 ### Tài khoản
 
-| Web | Trạng thái |
-| ---- | ---- |
-| `/login` | xong |
-| `/register` | xong |
-| `/forgot-password` | xong |
-| `/reset-password` | xong, mở bằng `amigoact://reset-password?token=...`. Liên kết trong email vẫn trỏ về web, xem `docs/deep-links.md` |
-| `/verify-email` | chưa |
-| `/account` | chưa |
-| `/account/security` | chưa |
-| `/account/notifications` | chưa |
+| Web | Di động | Trạng thái |
+| ---- | ---- | ---- |
+| `/login` | `src/app/login.tsx` | xong, có `?next=` |
+| `/register` | `src/app/register.tsx` | xong |
+| `/forgot-password` | `src/app/forgot-password.tsx` | xong |
+| `/reset-password` | `src/app/reset-password.tsx` | xong, `amigoact://reset-password?token=...` |
+| `/verify-email` | `src/app/verify-email.tsx` | xong, `amigoact://verify-email?token=...` |
+| `/account` | `src/app/account/index.tsx` | xong |
+| `/account/security` | `src/app/account/security.tsx` | xong |
+| `/account/notifications` | `src/app/account/notifications.tsx` | xong |
 
-### Khám phá và bảng tin
+### Bảng tin, khám phá, thông báo, tin nhắn
 
-| Web | Trạng thái |
-| ---- | ---- |
-| `/explore` | chưa |
-| `/compose` | chưa |
-| `/drafts` | chưa |
-| `/trash` | chưa |
-| `/notifications` | chưa |
-| `/messages` | chưa |
+| Web | Di động | Trạng thái |
+| ---- | ---- | ---- |
+| `/` (Tất cả, Tổ chức, thẻ, Tổ chức của tôi) | `src/app/index.tsx` | xong |
+| `/explore` | `src/app/explore.tsx` | xong |
+| `/compose` | `src/app/compose.tsx` | xong (chuyển hướng như web) |
+| `/drafts` | `src/app/drafts.tsx` | xong |
+| `/trash` | `src/app/trash.tsx` | xong |
+| `/notifications` (và chuông trên header) | `src/app/notifications.tsx`, `NotificationBell` | xong, realtime |
+| `/messages` | `src/app/messages.tsx` | xong: phòng chung, kênh, nhắn riêng, trả lời, cảm xúc, sửa, xóa, ghim, ảnh và video, đang nhập, realtime và hỏi lại mỗi 10 giây khi mất kết nối |
 
 ### Hoạt động và điểm danh
 
-| Web | Trạng thái |
-| ---- | ---- |
-| `/activities` | chưa |
-| `/activities/[id]` | chưa |
-| `/activities/[id]/edit` | chưa |
-| `/activities/[id]/registrations` | chưa |
-| `/activities/[id]/attendance` | chưa |
-| `/activities/[id]/attendance/[sessionId]` | chưa |
-| `/activities/[id]/hours` | chưa |
-| `/activities/[id]/appeals` | chưa |
-| `/checkin` | chưa |
-| `/hours` | chưa |
+| Web | Di động | Trạng thái |
+| ---- | ---- | ---- |
+| `/activities` | `src/app/activities/index.tsx` | xong |
+| `/activities/[id]` | `src/app/activities/[id]/index.tsx` | xong |
+| `/activities/[id]/edit` | `src/app/activities/[id]/edit.tsx` | xong, gồm ca |
+| `/activities/[id]/registrations` | `src/app/activities/[id]/registrations.tsx` | xong |
+| `/activities/[id]/attendance` | `src/app/activities/[id]/attendance/index.tsx` | xong |
+| `/activities/[id]/attendance/[sessionId]` | `src/app/activities/[id]/attendance/[sessionId].tsx` | xong |
+| `/activities/[id]/hours` | `src/app/activities/[id]/hours.tsx` | xong |
+| `/activities/[id]/appeals` | `src/app/activities/[id]/appeals.tsx` | xong |
+| `/checkin` | `src/app/checkin.tsx` | xong, thêm máy quét QR |
+| `/hours` | `src/app/hours.tsx` | xong |
 
 ### Chứng nhận
 
-| Web | Trạng thái |
-| ---- | ---- |
-| `/certificates` | chưa |
-| `/certificates/verify` | chưa |
-| `/certificates/verify/[serial]` | chưa |
+| Web | Di động | Trạng thái |
+| ---- | ---- | ---- |
+| `/certificates` | `src/app/certificates/index.tsx` | xong |
+| `/certificates/verify` | `src/app/certificates/verify/index.tsx` | xong |
+| `/certificates/verify/[serial]` | `src/app/certificates/verify/[serial].tsx` | xong |
 
 ### Tổ chức
 
-| Web | Trạng thái |
-| ---- | ---- |
-| `/organizations` | chưa |
-| `/organizations/new` | chưa |
-| `/org/[slug]` | chưa |
-| `/org/[slug]/activities` | chưa |
-| `/org/[slug]/activities/new` | chưa |
-| `/org/[slug]/activities/drafts` | chưa |
-| `/org/[slug]/activities/trash` | chưa |
-| `/org/[slug]/applications` | chưa |
-| `/org/[slug]/members` | chưa |
-| `/org/[slug]/roles` | chưa |
-| `/org/[slug]/settings` | chưa |
-| `/org/[slug]/hours` | chưa |
-| `/org/[slug]/certificates` | chưa |
-| `/org/[slug]/certificates/new` | chưa |
-| `/org/[slug]/certificates/[templateId]` | chưa |
-| `/org/[slug]/posts` | chưa |
-| `/org/[slug]/posts/new` | chưa |
-| `/org/[slug]/posts/drafts` | chưa |
-| `/org/[slug]/posts/trash` | chưa |
-| `/org/[slug]/posts/[postId]` | chưa |
-| `/org/[slug]/posts/[postId]/edit` | chưa |
+| Web | Di động | Trạng thái |
+| ---- | ---- | ---- |
+| `/organizations` | `src/app/organizations/index.tsx` | xong |
+| `/organizations/new` | `src/app/organizations/new.tsx` | xong |
+| `/org/[slug]` | `src/app/org/[slug]/index.tsx` | xong |
+| `/org/[slug]/activities` | `src/app/org/[slug]/activities/index.tsx` | xong |
+| `/org/[slug]/activities/new` | `src/app/org/[slug]/activities/new.tsx` | xong |
+| `/org/[slug]/activities/drafts` | `src/app/org/[slug]/activities/drafts.tsx` | xong |
+| `/org/[slug]/activities/trash` | `src/app/org/[slug]/activities/trash.tsx` | xong |
+| `/org/[slug]/applications` | `src/app/org/[slug]/applications.tsx` | xong |
+| `/org/[slug]/members` | `src/app/org/[slug]/members.tsx` | xong |
+| `/org/[slug]/roles` | `src/app/org/[slug]/roles.tsx` | xong |
+| `/org/[slug]/settings` | `src/app/org/[slug]/settings.tsx` | xong, gồm bộ sưu tập, quy tắc giờ, thùng rác |
+| `/org/[slug]/hours` | `src/app/org/[slug]/hours.tsx` | xong |
+| `/org/[slug]/certificates` | `src/app/org/[slug]/certificates/index.tsx` | xong |
+| `/org/[slug]/certificates/new` | `src/app/org/[slug]/certificates/new.tsx` | xong |
+| `/org/[slug]/certificates/[templateId]` | `src/app/org/[slug]/certificates/[templateId].tsx` | xong |
+| `/org/[slug]/posts` | `src/app/org/[slug]/posts/index.tsx` | xong |
+| `/org/[slug]/posts/new` | `src/app/org/[slug]/posts/new.tsx` | xong |
+| `/org/[slug]/posts/drafts` | `src/app/org/[slug]/posts/drafts.tsx` | xong |
+| `/org/[slug]/posts/trash` | `src/app/org/[slug]/posts/trash.tsx` | xong |
+| `/org/[slug]/posts/[postId]` | `src/app/org/[slug]/posts/[postId]/index.tsx` | xong, gồm bình luận |
+| `/org/[slug]/posts/[postId]/edit` | `src/app/org/[slug]/posts/[postId]/edit.tsx` | xong |
+
+Trang lỗi của web (`not-found.tsx`) có bản `src/app/+not-found.tsx`; trang không tìm thấy tổ chức và hoạt động nằm trong `OrgScreen` và `ActivityScreen`.

@@ -1,18 +1,22 @@
 # Liên kết sâu (deep link)
 
-Liên kết sâu mở thẳng một màn hình trong app từ bên ngoài, ví dụ liên kết đặt lại mật khẩu trong email. Hiện có một màn hình dùng nó: `/reset-password`.
+Liên kết sâu mở thẳng một màn hình trong app từ bên ngoài, ví dụ liên kết trong email hay mã QR điểm danh. Mọi màn hình đều có địa chỉ giống web (Expo Router theo tên file), nên `amigoact://<đường dẫn web>` mở đúng màn hình đó.
 
 ## Đang chạy được
 
-Scheme riêng của app là `amigoact` (khai báo trong `app.json`). Expo Router tự đưa liên kết tới đúng file trong `src/app/`:
+Scheme riêng của app là `amigoact` (khai báo trong `app.json`). Ba liên kết mang token:
 
-| Liên kết | Màn hình |
-| ---- | ---- |
-| `amigoact://reset-password?token=<token>` | `src/app/reset-password.tsx` |
+| Liên kết | Màn hình | Token gửi tới |
+| ---- | ---- | ---- |
+| `amigoact://reset-password?token=<token>` | `src/app/reset-password.tsx` | `POST /auth/password/reset` |
+| `amigoact://verify-email?token=<token>` | `src/app/verify-email.tsx` | `POST /auth/email/verify` |
+| `amigoact://checkin?token=<token>` | `src/app/checkin.tsx` (cần đăng nhập) | `POST /attendance/check-in` |
 
-- Màn hình này nằm ngoài hai nhóm `signedIn` và `signedOut` trong `src/app/_layout.tsx`, nên mở được cả khi đã đăng nhập, giống trang web.
-- Token chỉ đọc bằng `tokenFromParam` (`src/lib/deepLink.ts`): thiếu, rỗng hoặc dài quá 512 ký tự thì hiện "Liên kết không hợp lệ hoặc đã hết hạn" và nút "Gửi lại liên kết". Backend mới là nơi quyết định token có đúng không.
-- Token không được hiển thị, ghi log hay gửi đi đâu ngoài `POST /auth/password/reset`.
+- Mọi màn hình mở được khi chưa đăng nhập, giống web. Màn hình cần tài khoản tự chuyển sang `/login?next=<đường dẫn>` (`RequireUser`), đăng nhập xong quay lại, kể cả token điểm danh.
+- Địa chỉ chủ sở hữu của web `/organizations/<slug>/...` được chuyển sang `/org/<slug>/...` (`src/app/organizations/[slug]/`), vì app chỉ có một địa chỉ cho mỗi tổ chức. Địa chỉ không có trong app mở màn hình "Không tìm thấy trang" (`+not-found.tsx`).
+- Token chỉ đọc bằng `tokenFromParam` (`src/lib/deepLink.ts`): thiếu, rỗng hoặc dài quá 512 ký tự thì hiện "Liên kết không hợp lệ hoặc đã hết hạn". Backend mới là nơi quyết định token có đúng không. Màn hình cần một lần bấm để dùng token, nên mở liên kết không tự thay đổi dữ liệu.
+- Token không được hiển thị, ghi log hay gửi đi đâu ngoài endpoint trong bảng.
+- Máy quét QR trong app (`QrScanner`) chỉ nhận địa chỉ `/checkin?token=` (web hoặc scheme), xem `tokenFromScan` trong `src/lib/checkInLink.ts`. Mã QR app hiện ra dùng `EXPO_PUBLIC_APP_URL` (địa chỉ web) nếu có, để camera thường mở được; không có thì dùng `amigoact://checkin`.
 - Đặt lại xong, backend kết thúc mọi phiên đăng nhập, kể cả của máy này. Nếu máy đang đăng nhập, app xoá token đã lưu ngay (`signOut`) thay vì chờ lỗi 401.
 - Thử trên Android: `adb shell am start -a android.intent.action.VIEW -d "amigoact://reset-password?token=abc"`. Với Expo Go dùng scheme `exp://`, xem `bunx uri-scheme`.
 
@@ -28,8 +32,8 @@ Cùng một liên kết `https` mở app nếu app đã cài và được xác m
 2. **Mã định danh app**, hiện chưa đặt trong `app.json`: `ios.bundleIdentifier` và `android.package`. Đây là danh tính cố định trên cửa hàng ứng dụng, nên cần chủ dự án quyết định.
 3. **Web phục vụ hai tệp** ở tên miền đó (việc của `amigoact-fe`, chưa làm):
    - `/.well-known/assetlinks.json` cho Android, chứa tên gói và dấu vân tay SHA-256 của khoá ký app.
-   - `/.well-known/apple-app-site-association` cho iOS, chứa Team ID và bundle id, với đường dẫn `/reset-password`.
-4. **Build app với `APP_LINK_HOST`**, ví dụ `APP_LINK_HOST=amigoact.example.com`. `app.config.ts` khi đó thêm `associatedDomains` cho iOS và `intentFilters` có `autoVerify` cho Android, giới hạn ở đường dẫn `/reset-password`. Khi chưa đặt biến này, app chỉ có scheme riêng. Giá trị phải là tên miền trần, không có `https://` hay đường dẫn, nếu không build dừng với lỗi.
+   - `/.well-known/apple-app-site-association` cho iOS, chứa Team ID và bundle id, với các đường dẫn `/reset-password`, `/verify-email` và `/checkin`.
+4. **Build app với `APP_LINK_HOST`**, ví dụ `APP_LINK_HOST=amigoact.example.com`. `app.config.ts` khi đó thêm `associatedDomains` cho iOS và `intentFilters` có `autoVerify` cho Android, giới hạn ở ba đường dẫn `/reset-password`, `/verify-email` và `/checkin` (`LINK_PATHS`). Khi chưa đặt biến này, app chỉ có scheme riêng. Giá trị phải là tên miền trần, không có `https://` hay đường dẫn, nếu không build dừng với lỗi.
 
 Kiểm tra cấu hình sinh ra: `APP_LINK_HOST=amigoact.example.com bunx expo config --type public`.
 

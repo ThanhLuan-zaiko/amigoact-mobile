@@ -41,3 +41,23 @@ Khuyến nghị: **B** để bắt đầu, vì app có thể dùng chính API ba
 - Phải dùng HTTPS ở môi trường thật.
 
 Khi viết code gọi API, dùng các hàm trong `src/lib/*Api.ts` và địa chỉ từ `EXPO_PUBLIC_API_URL`. Lỗi do cổng sinh ra (`not_found`, `rate_limited`, `payload_too_large`, `upstream_unavailable`, `upstream_timeout`, `too_many_sockets`, `origin_forbidden`) cũng có dạng `{"detail": "<mã>"}`, nên phải có trong bảng dịch lỗi của app. Cổng mới được kiểm thử với backend giả, chưa thử với backend thật.
+
+## Cấu trúc code
+
+| Thư mục, tệp | Vai trò | Tương ứng trên web |
+| ---- | ---- | ---- |
+| `src/app/` | Màn hình, cùng đường dẫn với `../amigoact-fe/src/app/(app)/` | các `page.tsx` |
+| `src/components/shell/` | `Page` (header, nội dung, thanh điều hướng dưới), `AppHeader`, `BottomNav`, `AccountMenu`, `BackLink` | layout `(app)`, `AppHeader`, `MobileNav`, `SideNav` |
+| `src/components/common/` | Nút, icon, ảnh, `Sheet`, `ConfirmDialog`, `SelectMenu`, phân trang, trạng thái rỗng và lỗi | các thành phần dùng chung trong `_components/` |
+| `src/components/<chủ đề>/` | Thành phần của từng phần: `posts`, `organizations`, `activities`, `attendance`, `hours`, `certificates`, `chat`, `roles`, `account`, `notifications` | `_components/<chủ đề>/` |
+| `src/lib/http.ts` | `read` (gửi token nếu có), `send` (cần token), `uploadMedia`, `mediaSource` (ảnh qua cổng kèm token) | `backendFetch`, `authedFetch`, route `/media` |
+| `src/lib/*Api.ts`, `src/lib/*Actions.ts` | Đọc và ghi theo từng chủ đề, cùng tên hàm và cùng kiểm tra với web | `src/lib/*Api.ts`, `src/app/_actions/*.ts` |
+| `src/lib/refreshBus.ts` | `invalidate()` sau mỗi thay đổi, mọi màn hình đang mở (`useLoad`) tải lại | `revalidatePath` |
+| `src/hooks/useLoad.ts`, `useCursorList.ts` | Tải dữ liệu cho màn hình, tải lại khi quay lại màn hình, khi kéo xuống và khi có `invalidate()` | server component sau `Suspense` |
+| `src/components/realtime/` | Một socket cho cả app (vé dùng một lần, đóng khi app vào nền) | `_components/realtime/` |
+
+Quy tắc khi thêm màn hình:
+
+- Màn hình cần đăng nhập bọc trong `RequireUser`; màn hình của tổ chức dùng `OrgScreen`; màn hình quản lý một hoạt động dùng `ActivityScreen`.
+- Thao tác trả về `ActionResult` (`FormState` cộng `next`). Lỗi hiển thị bằng `FormMessage` hoặc ngay cạnh nút (`ActionButton`, `ConfirmAction`, `ActionTextButton`).
+- Không dùng `style={...}`: hình dạng ảnh theo kích thước gốc lấy từ `aspectClass` (`src/lib/aspectClasses.ts`), vị trí điểm lấy nét từ `markerClass` (`src/lib/focus.ts`).

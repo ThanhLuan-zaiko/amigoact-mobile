@@ -52,9 +52,9 @@ Metro has to run (or `expo export` has to be run once) after you add a Tailwind 
 ## Styling: Tailwind only (Uniwind)
 
 - Style every element with Tailwind utility classes through `className`, using Uniwind (Tailwind 4). This matches the web rule "Tailwind only".
-- Do not use `StyleSheet.create` and do not use inline `style={{ ... }}`. The only exception is a value that cannot be a class, such as an animated value, or a prop a library only accepts as a style object. Keep these rare and comment why.
+- Do not use `StyleSheet.create` and do not use `style={...}` at all; CI gate 13 rejects every `style=` prop. A value that changes per item becomes one of a fixed list of classes written out in source, as the web does for focal points: picture shapes use `aspectClass` (`src/lib/aspectClasses.ts`), focal-point markers use `markerClass` (`src/lib/focus.ts`). Safe-area padding comes from `SafeAreaView` wrapped with `withUniwind`.
 - `src/global.css` holds only the two imports and the `@theme` block that maps the three Be Vietnam Pro font families to `font-body`, `font-body-medium`, and `font-body-semibold`. This differs from the web, which loads the font with `next/font`. Do not add other rules.
-- Dark mode follows the system (`userInterfaceStyle: "automatic"`). Write dark styles with the normal `dark:` prefix.
+- Dark mode follows the system (`userInterfaceStyle: "automatic"`) until the viewer picks a theme with the header toggle, the same toggle as the web `ThemeToggle`. The choice is applied with `Uniwind.setTheme` and saved by `src/lib/themePreference.ts`. Write dark styles with the normal `dark:` prefix, and read the current theme with `useUniwind()` or `useThemeColors`, never with `useColorScheme`.
 - Colors that a prop needs as a string (icon `color`, `StatusBar`, navigator options) come from `src/lib/theme.ts`, which holds the exact hex of the Tailwind teal and slate shades used on the web. Do not scatter hex values elsewhere.
 
 ## Design rules
@@ -67,7 +67,7 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Do not nest cards inside cards. Separate sections with borders and dividers.
 - Corner radius: inputs and buttons `rounded-sm` or `rounded-md`; cards, panels, images, and dialogs `rounded-lg` or `rounded-xl`; `rounded-full` for avatars and dots. Never beyond `rounded-xl`.
 - Font: Be Vietnam Pro, loaded in `src/app/_layout.tsx`. Do not use Inter or the system font for text that the web shows in Be Vietnam Pro.
-- Icons: use `Feather` from `@expo/vector-icons`. Three web icons have no Feather twin, so use `MaterialCommunityIcons` from the same package for exactly these: `BsQrCode` is `qrcode`, `TbPin` is `pin`, `TbPinnedOff` is `pin-off`. Do not add other icon sets, and do not draw icons by hand with `react-native-svg`. Icon `color` comes from `useThemeColors`, never from `className`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
+- Icons: use `Feather` from `@expo/vector-icons`. Three web icons have no Feather twin, so use `MaterialCommunityIcons` from the same package for exactly these: `BsQrCode` is `qrcode`, `TbPin` is `pin`, `TbPinnedOff` is `pin-off`. Do not add other icon sets, and do not draw icons by hand with `react-native-svg`. `react-native-svg` is for data only: the attendance QR, the hour charts, and the certificate preview. Icon `color` comes from `useThemeColors`, never from `className`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
 - Touch targets are at least 44 by 44 points. Respect safe areas with `react-native-safe-area-context`. Handle the keyboard on forms, and keep long lists in `FlatList` (not `ScrollView` plus `map`).
 - Every screen handles loading, empty, and error states, the same as the web.
 
@@ -82,6 +82,8 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Tokens are stored only in `expo-secure-store`. Never use `AsyncStorage` or any unencrypted storage for tokens, and never log them.
 - Refresh tokens rotate on every use, and reusing a rotated token ends the session. Serialize refresh calls so two requests never refresh at once, and store the new token before retrying the request.
 - Role and permission gates use `hasPermission(viewer, "module.action")` and `hasModule(viewer, "module")` ported from the web, never `role === "admin"`. The backend checks again.
+- Read and write with `read` and `send` from `src/lib/http.ts`, through one function per web Server Action in `src/lib/*Api.ts` or `src/lib/*Actions.ts`, with the same name and the same checks. A write returns `ActionResult` (`FormState` plus `next` where the web redirects) and calls `invalidate()` from `src/lib/refreshBus.ts` where the web calls `revalidatePath`. Screens load with `useLoad` or `useCursorList`, which reload on `invalidate()`. Code layout is described in `docs/architecture.md`.
+- Server pictures load with `Picture` (`mediaSource` adds the token for private files). Uploads go through `uploadMedia` first; only asset ids go with a form, as on the web.
 
 ## Gateway (`gateway/`)
 
@@ -93,8 +95,8 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 
 ## Deep links
 
-- Details are in `docs/deep-links.md`. The app scheme is `amigoact`; Expo Router maps `amigoact://reset-password?token=...` to `src/app/reset-password.tsx` by file name.
-- A screen that a link opens from outside the app (today only `reset-password`) is declared in `src/app/_layout.tsx` outside the `signedIn` and `signedOut` groups. Do not move it into a group.
+- Details are in `docs/deep-links.md`. The app scheme is `amigoact`; Expo Router maps `amigoact://<web path>` to the screen with that path, for example `amigoact://reset-password?token=...` to `src/app/reset-password.tsx`.
+- Every screen is open to visitors, as on the web; `src/app/_layout.tsx` has no signed-in or signed-out groups. A screen that needs an account wraps itself in `RequireUser`, which sends visitors to `/login?next=<path>` and back. Do not add route groups that hide screens.
 - Read a route param with `tokenFromParam` and validate it before use. Never display, log, or report a token from a link.
 - Web-address links (universal links, app links) are added only through `APP_LINK_HOST` in `app.config.ts`. Do not hard-code a domain, and do not put store ids or keys in the repo.
 
