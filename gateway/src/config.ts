@@ -9,6 +9,7 @@ export type Config = {
   maxSocketsPerIp: number;
   trustProxy: boolean;
   wsOrigins: string[];
+  corsOrigins: string[];
 };
 
 type Env = Record<string, string | undefined>;
@@ -41,14 +42,17 @@ function parseBackendUrl(raw: string | undefined): string {
   return url.toString().replace(/\/+$/, "");
 }
 
-export function parseOrigins(text: string | undefined): string[] {
+export function parseOrigins(
+  text: string | undefined,
+  name = "WS_ORIGINS",
+): string[] {
   const origins = (text ?? "")
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
   for (const origin of origins) {
     if (!ORIGIN.test(origin)) {
-      throw new Error(`WS_ORIGINS has an invalid origin: ${origin}`);
+      throw new Error(`${name} has an invalid origin: ${origin}`);
     }
   }
   return origins;
@@ -75,6 +79,7 @@ export function loadConfig(env: Env = Bun.env): Config {
     upstreamTimeoutMs: integer(env, "UPSTREAM_TIMEOUT", 30) * 1000,
     maxSocketsPerIp: integer(env, "MAX_SOCKETS_PER_IP", 5),
     trustProxy: trust === "true",
-    wsOrigins: parseOrigins(env.WS_ORIGINS),
+    wsOrigins: parseOrigins(env.WS_ORIGINS, "WS_ORIGINS"),
+    corsOrigins: parseOrigins(env.CORS_ORIGINS, "CORS_ORIGINS"),
   };
 }

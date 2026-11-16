@@ -1,5 +1,6 @@
 import type { Server } from "bun";
 import type { Config } from "./config";
+import { isPreflight, preflight, withCors } from "./cors";
 import { forward, problem } from "./proxy";
 import { RateLimiter } from "./rateLimit";
 import {
@@ -32,7 +33,14 @@ export function startGateway(config: Config): Gateway {
       if (request.headers.get("upgrade")?.toLowerCase() === "websocket") {
         return upgrade(request, srv, config, limiter, counter);
       }
-      return forward(request, srv.requestIP(request)?.address, config, limiter);
+      if (isPreflight(request)) return preflight(request, config);
+      const response = await forward(
+        request,
+        srv.requestIP(request)?.address,
+        config,
+        limiter,
+      );
+      return withCors(response, request, config);
     },
     error() {
       return problem(500, "internal_error");

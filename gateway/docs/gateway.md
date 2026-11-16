@@ -50,6 +50,17 @@ Backend không đòi khoá cho socket mà dùng vé dùng một lần từ `POST
 | `MAX_SOCKETS_PER_IP` | 5 | Socket mở cùng lúc |
 | `TRUST_PROXY` | false | Chỉ đặt `true` khi có đúng một reverse proxy tin cậy phía trước, đặt `X-Forwarded-For` |
 | `WS_ORIGINS` | trống | Origin trình duyệt được mở socket. Không dùng `*` |
+| `CORS_ORIGINS` | trống | Chỉ dùng khi phát triển: origin trình duyệt được gọi API HTTP (Expo web). Không dùng `*` |
+
+## CORS (chạy app trên trình duyệt)
+
+App native không gửi `Origin` nên không cần CORS. Để chạy app bằng Expo web khi phát triển, đặt `CORS_ORIGINS=http://localhost:8081` và thêm cùng origin vào `WS_ORIGINS` để mở được socket.
+
+- Chỉ origin khớp chính xác mới nhận `Access-Control-Allow-Origin`. Origin khác không nhận header nào nên trình duyệt chặn.
+- Preflight `OPTIONS` được cổng trả lời (`204`, hoặc `403` với origin lạ), không đi tới backend và không tính vào giới hạn tần suất.
+- Không bao giờ bật `Access-Control-Allow-Credentials`: app gửi token Bearer, không dùng cookie.
+- Lỗi của cổng (như `rate_limited`) cũng mang header CORS để trang đọc được mã lỗi. `Retry-After` được mở cho trang đọc.
+- Để trống khi triển khai thật.
 
 ## Triển khai
 

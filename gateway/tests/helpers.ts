@@ -73,6 +73,7 @@ export function testConfig(
     maxSocketsPerIp: 5,
     trustProxy: false,
     wsOrigins: [],
+    corsOrigins: [],
     ...over,
   };
 }
