@@ -9,7 +9,7 @@ Instructions for AI coding agents working in `amigoact-mobile`. These rules over
 - Before building a screen, read its web counterpart under `../amigoact-fe/src/app/(app)/` and the matching `../amigoact-fe/docs/<topic>.md`. Match the flow, fields, validation, empty states, and Vietnamese text.
 - If web and mobile disagree, the web is right, unless the difference is forced by the platform (no hover, no URL bar, camera, push). Record such differences in `docs/web-parity.md`.
 - When the web behavior changes, update the mobile app and `docs/web-parity.md` in the same effort. Do not invent features that the web does not have.
-- Port pure logic (no DOM, no Next.js) from `../amigoact-fe/src/lib/` as-is, together with its tests: validation, formatting, permissions (`hasPermission`), topic names, pagination, Vietnam time conversion (`toLocalInput`, `fromLocalInput`). Keep names and behavior identical so the two stay comparable.
+- Port pure logic (no DOM, no Next.js) from `../amigoact-fe/src/lib/` as-is, together with its tests: validation, formatting, permissions (`hasPermission`), topic names, pagination, time zones (`timeZone.ts`) and time conversion (`toLocalInput`, `fromLocalInput`). Keep names and behavior identical so the two stay comparable.
 - The backend (`../amigoact-be`) owns the rules. Its `docs/` describe the API and error codes. API errors use `detail` as a stable code; the app translates codes to Vietnamese with the same table as the web.
 
 ## Expo has changed: do not trust your training data
@@ -67,7 +67,7 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Do not nest cards inside cards. Separate sections with borders and dividers.
 - Corner radius: inputs and buttons `rounded-sm` or `rounded-md`; cards, panels, images, and dialogs `rounded-lg` or `rounded-xl`; `rounded-full` for avatars and dots. Never beyond `rounded-xl`.
 - Font: Be Vietnam Pro, loaded in `src/app/_layout.tsx`. Do not use Inter or the system font for text that the web shows in Be Vietnam Pro.
-- Icons: use `Feather` from `@expo/vector-icons`. Three web icons have no Feather twin, so use `MaterialCommunityIcons` from the same package for exactly these: `BsQrCode` is `qrcode`, `TbPin` is `pin`, `TbPinnedOff` is `pin-off`. Do not add other icon sets, and do not draw icons by hand with `react-native-svg`. `react-native-svg` is for data only: the attendance QR, the hour charts, and the certificate preview. Icon `color` comes from `useThemeColors`, never from `className`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
+- Icons: use `Feather` from `@expo/vector-icons`. Four icons have no Feather twin, so use `MaterialCommunityIcons` from the same package for exactly these: `BsQrCode` is `qrcode`, `TbPin` is `pin`, `TbPinnedOff` is `pin-off`, and the filled `heart` of a liked comment (the web fills `FiHeart` with `fill-current`, which a Feather font glyph cannot do). Do not add other icon sets, and do not draw icons by hand with `react-native-svg`. `react-native-svg` is for data only: the attendance QR, the hour charts, and the certificate preview. Icon `color` comes from `useThemeColors`, never from `className`. The web uses `react-icons/fi`, which is the same Feather set, so icon names carry over one to one (`FiHeart` is `<Feather name="heart" />`). `react-icons` itself does not work on React Native. Use icons freely, and prefer icons over words for what everyone understands. Every icon-only `Pressable` needs `accessibilityLabel` and `accessibilityRole="button"`.
 - Touch targets are at least 44 by 44 points. Respect safe areas with `react-native-safe-area-context`. Handle the keyboard on forms, and keep long lists in `FlatList` (not `ScrollView` plus `map`).
 - Every screen handles loading, empty, and error states, the same as the web.
 
@@ -110,7 +110,7 @@ The web design rules apply, translated for a phone. Read `../amigoact-fe/AGENTS.
 - Code identifiers, file names, and comments are in English. Text shown to users is in Vietnamese, with the same wording as the web.
 - Exception: `.md` files may be written in Vietnamese.
 - Identifiers must be ASCII.
-- Dates and times display in Vietnam time (`Asia/Ho_Chi_Minh`), with the same helpers as the web.
+- Dates and times display in the device's own time zone, with the same helpers as the web (`../amigoact-fe/docs/time-zones.md`). Call them without a `timeZone` argument, which means the device zone. Picked dates and times are wall-clock times in the device zone, read with `fromLocalInput`. Name the zone where the web does (`formatTimeRange`, `formatDateTimeZoned`). Hour terms, hour charts, and the certificate date stay in Vietnam time, as on the web.
 
 ## File size limits
 

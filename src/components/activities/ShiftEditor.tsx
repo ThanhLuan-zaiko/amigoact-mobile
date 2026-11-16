@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 import type { ActionResult } from "@/lib/actionResult";
 import {
-  formatDateTime,
+  formatTimeRange,
   type Shift,
   seatsText,
   toLocalInput,
@@ -21,6 +21,7 @@ import { FormMessage } from "../FormParts";
 import DateField from "../forms/DateField";
 import { InputField } from "../forms/Fields";
 import { panel, sectionTitle, strongText } from "../ui";
+import ZoneNote from "./ZoneNote";
 
 function ShiftForm({
   activityId,
@@ -70,6 +71,7 @@ function ShiftForm({
   return (
     <View className="gap-3">
       <FormMessage state={state} />
+      <ZoneNote />
       <InputField
         label="Tên ca"
         value={values.title}
@@ -133,7 +135,7 @@ function ShiftRow({ activityId, shift }: { activityId: string; shift: Shift }) {
         </Text>
         <View className="flex-row flex-wrap gap-x-4 gap-y-1">
           <IconStat icon="calendar" label="Thời gian">
-            {`${formatDateTime(shift.start_at)} – ${formatDateTime(shift.end_at)}`}
+            {formatTimeRange(shift.start_at, shift.end_at)}
           </IconStat>
           <IconStat icon="users" label="Số chỗ">
             {seatsText(shift.seats_taken, shift.capacity)}

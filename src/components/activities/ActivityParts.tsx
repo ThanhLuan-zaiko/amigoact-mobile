@@ -5,6 +5,7 @@ import {
   type ActivityDetail,
   type ActivitySummary,
   formatDateTime,
+  formatTimeRange,
   REGISTRATION_STATUS_LABELS,
   type RegistrationStatus,
   type Shift,
@@ -17,6 +18,7 @@ import { auth } from "@/lib/client";
 import ActionButton from "../common/ActionButton";
 import ActionTextButton from "../common/ActionTextButton";
 import Icon, { type IconName } from "../common/Icon";
+import Picture from "../common/Picture";
 import { IconStat } from "../common/States";
 import {
   mutedText,
@@ -29,74 +31,89 @@ import {
 
 // The web ActivityCard: the whole card opens the activity, tag chips lead to
 // the activities with the same tag.
+// A picture borrowed from a public post (or the organization cover) leads the
+// card when the list has one, as on the web.
 export function ActivityCard({ activity }: { activity: ActivitySummary }) {
   const place = [activity.location, activity.city].filter(Boolean).join(", ");
   const tags = activity.tags ?? [];
+  const picture = activity.picture;
   return (
     <Pressable
       onPress={() => router.push(`/activities/${activity.id}` as never)}
       accessibilityRole="link"
       accessibilityLabel={activity.title}
-      className={`${panel} min-w-0 gap-2 p-4 active:border-teal-700 dark:active:border-teal-400`}
+      className={`${panel} min-w-0 overflow-hidden active:border-teal-700 dark:active:border-teal-400`}
     >
-      <View className="flex-row items-start gap-2">
-        <Text className={`min-w-0 flex-1 ${strongText}`}>{activity.title}</Text>
-        {activity.status !== "published" ? (
-          <View className={tagChip}>
-            <Text className={tagChipText}>
-              {ACTIVITY_STATUS_LABELS[activity.status]}
-            </Text>
+      {picture ? (
+        <Picture
+          src={picture.url}
+          width={640}
+          focus={picture.focus}
+          className="aspect-video w-full"
+        />
+      ) : null}
+      <View className="min-w-0 gap-2 p-4">
+        <View className="flex-row items-start gap-2">
+          <Text className={`min-w-0 flex-1 ${strongText}`}>
+            {activity.title}
+          </Text>
+          {activity.status !== "published" ? (
+            <View className={tagChip}>
+              <Text className={tagChipText}>
+                {ACTIVITY_STATUS_LABELS[activity.status]}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text numberOfLines={1} className={mutedText}>
+          {activity.organization_name}
+        </Text>
+        <View className="flex-row flex-wrap gap-x-4 gap-y-1">
+          {activity.start_at ? (
+            <IconStat icon="calendar" label="Thời gian">
+              {formatDateTime(activity.start_at)}
+            </IconStat>
+          ) : null}
+          {activity.is_remote ? (
+            <IconStat icon="wifi" label="Trực tuyến">
+              Online
+            </IconStat>
+          ) : place ? (
+            <IconStat icon="map-pin" label="Địa điểm">
+              {place}
+            </IconStat>
+          ) : null}
+          <IconStat icon="users" label="Số chỗ">
+            {seatsText(activity.seats_taken, activity.capacity)}
+          </IconStat>
+          {activity.hours_awarded !== null ? (
+            <IconStat icon="clock" label="Giờ tình nguyện">
+              {`${activity.hours_awarded}h`}
+            </IconStat>
+          ) : null}
+        </View>
+        {tags.length > 0 ? (
+          <View className="flex-row flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Pressable
+                key={tag}
+                onPress={() =>
+                  router.push(
+                    appPath(
+                      activityTagHref(activity.organization_slug, tag),
+                    ) as never,
+                  )
+                }
+                accessibilityRole="link"
+                accessibilityLabel={`Xem hoạt động cùng thẻ ${tag}`}
+                className={tagChip}
+              >
+                <Text className={tagChipText}>#{tag}</Text>
+              </Pressable>
+            ))}
           </View>
         ) : null}
       </View>
-      <Text numberOfLines={1} className={mutedText}>
-        {activity.organization_name}
-      </Text>
-      <View className="flex-row flex-wrap gap-x-4 gap-y-1">
-        {activity.start_at ? (
-          <IconStat icon="calendar" label="Thời gian">
-            {formatDateTime(activity.start_at)}
-          </IconStat>
-        ) : null}
-        {activity.is_remote ? (
-          <IconStat icon="wifi" label="Trực tuyến">
-            Online
-          </IconStat>
-        ) : place ? (
-          <IconStat icon="map-pin" label="Địa điểm">
-            {place}
-          </IconStat>
-        ) : null}
-        <IconStat icon="users" label="Số chỗ">
-          {seatsText(activity.seats_taken, activity.capacity)}
-        </IconStat>
-        {activity.hours_awarded !== null ? (
-          <IconStat icon="clock" label="Giờ tình nguyện">
-            {`${activity.hours_awarded}h`}
-          </IconStat>
-        ) : null}
-      </View>
-      {tags.length > 0 ? (
-        <View className="flex-row flex-wrap gap-2">
-          {tags.map((tag) => (
-            <Pressable
-              key={tag}
-              onPress={() =>
-                router.push(
-                  appPath(
-                    activityTagHref(activity.organization_slug, tag),
-                  ) as never,
-                )
-              }
-              accessibilityRole="link"
-              accessibilityLabel={`Xem hoạt động cùng thẻ ${tag}`}
-              className={tagChip}
-            >
-              <Text className={tagChipText}>#{tag}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
     </Pressable>
   );
 }
@@ -201,7 +218,7 @@ export function RegisterControls({ activity }: { activity: ActivityDetail }) {
             </Text>
             <View className="flex-row flex-wrap gap-x-4 gap-y-1">
               <IconStat icon="calendar" label="Thời gian">
-                {`${formatDateTime(shift.start_at)} – ${formatDateTime(shift.end_at)}`}
+                {formatTimeRange(shift.start_at, shift.end_at)}
               </IconStat>
               <IconStat icon="users" label="Số chỗ">
                 {seatsText(shift.seats_taken, shift.capacity)}

@@ -12,7 +12,8 @@ import { useLoad } from "@/hooks/useLoad";
 import {
   ACTIVITY_STATUS_LABELS,
   type ActivityDetail,
-  formatDateTime,
+  formatDateTimeZoned,
+  formatTimeRange,
   seatsText,
 } from "@/lib/activities";
 import { getActivity } from "@/lib/activityApi";
@@ -55,7 +56,7 @@ function ActivityContent({ activity }: { activity: ActivityDetail }) {
         <View className="flex-row flex-wrap gap-x-5 gap-y-2">
           {activity.start_at ? (
             <IconStat icon="calendar" label="Thời gian">
-              {`${formatDateTime(activity.start_at)}${activity.end_at ? ` – ${formatDateTime(activity.end_at)}` : ""}`}
+              {formatTimeRange(activity.start_at, activity.end_at)}
             </IconStat>
           ) : null}
           {activity.is_remote ? (
@@ -103,7 +104,7 @@ function ActivityContent({ activity }: { activity: ActivityDetail }) {
           </IconStat>
           {activity.registration_deadline ? (
             <IconStat icon="watch" label="Hạn đăng ký">
-              {formatDateTime(activity.registration_deadline)}
+              {formatDateTimeZoned(activity.registration_deadline)}
             </IconStat>
           ) : null}
         </View>

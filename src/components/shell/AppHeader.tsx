@@ -9,13 +9,17 @@ import AccountMenu from "./AccountMenu";
 import ComposeMenu from "./ComposeMenu";
 
 // The home screen's "Tổ chức" tab searches organizations. Every other screen
-// searches activities, as the web header search does.
+// searches activities on the home screen's "Hoạt động" tab, as the web header
+// search does.
 function useSearchTarget() {
   const pathname = usePathname();
   const { tab } = useGlobalSearchParams<{ tab?: string }>();
   return pathname === "/" && tab === "orgs"
     ? { label: "Tìm tổ chức", href: "/?tab=orgs&focus=search" }
-    : { label: "Tìm hoạt động", href: "/explore?focus=search" };
+    : {
+        label: "Tìm hoạt động, thành phố",
+        href: "/?tab=activities&focus=search",
+      };
 }
 
 export function ThemeToggle() {

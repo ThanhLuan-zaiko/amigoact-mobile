@@ -5,8 +5,9 @@ import type { ThemeColors } from "@/lib/theme";
 export type IconName = keyof typeof Feather.glyphMap;
 export type IconTone = keyof ThemeColors;
 
-// The three web icons with no Feather twin (see AGENTS.md).
-export type ExtraIconName = "qrcode" | "pin" | "pin-off";
+// The web icons with no Feather twin (see AGENTS.md). "heart" is the filled
+// heart of a liked comment; Feather draws outlines only.
+export type ExtraIconName = "qrcode" | "pin" | "pin-off" | "heart";
 
 // A Feather icon colored from the theme, since an icon color cannot be a class.
 export default function Icon({

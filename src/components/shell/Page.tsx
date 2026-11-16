@@ -20,17 +20,20 @@ const Safe = withUniwind(SafeAreaView);
 // The web (app) layout on a phone: the header on top, the page in one column
 // with 16 points of padding, and the quick navigation at the bottom.
 // `scroll={false}` hands scrolling to the child, for screens built on a
-// FlatList. `onRefresh` adds pull-to-refresh.
+// FlatList. `onRefresh` adds pull-to-refresh. `top` stays above the
+// scrolling content, the native form of a web sticky row.
 export default function Page({
   children,
   scroll = true,
   refreshing = false,
   onRefresh,
+  top,
 }: {
   children: ReactNode;
   scroll?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
+  top?: ReactNode;
 }) {
   const theme = useThemeColors();
   return (
@@ -40,6 +43,11 @@ export default function Page({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
+        {top ? (
+          <View className="px-4 pt-4 md:mx-auto md:w-full md:max-w-3xl">
+            {top}
+          </View>
+        ) : null}
         {scroll ? (
           <ScrollView
             keyboardShouldPersistTaps="handled"

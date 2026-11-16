@@ -42,6 +42,9 @@ export type ActivityValues = {
 
 const orNull = (value: string) => value.trim() || null;
 
+// Picked times are wall-clock times in the device zone (fromLocalInput with no
+// zone), the zone the form's ZoneNote names. The web reads them in the zone the
+// form carried in `time_zone`.
 function activityBody(values: ActivityValues) {
   return {
     title: values.title.trim(),

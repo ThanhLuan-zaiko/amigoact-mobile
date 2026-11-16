@@ -10,8 +10,12 @@ import Picture from "../common/Picture";
 import { IconStat } from "../common/States";
 import { mutedText, panel, tagChip, tagChipText } from "../ui";
 
+// The strip has four places, like the web grid of four columns.
+const SLOTS = ["first", "second", "third", "fourth"];
+
 // Ported from the web OrganizationCard. The cover is a banner above the text;
-// without one, the logo or the initials lead.
+// without one, the logo or the initials lead. On the public directory a strip
+// of pictures from the newest public posts follows.
 export default function OrganizationCard({
   organization,
   badge,
@@ -20,6 +24,7 @@ export default function OrganizationCard({
   // Replaces the join policy, for example with the viewer's role.
   badge?: string;
 }) {
+  const postPictures = (organization.post_pictures ?? []).slice(0, 4);
   return (
     <Pressable
       onPress={() => router.push(`/org/${organization.slug}` as never)}
@@ -32,7 +37,7 @@ export default function OrganizationCard({
           src={organization.cover_url}
           width={640}
           focus={organization.cover_focus}
-          className="h-20 w-full"
+          className="h-24 w-full"
         />
       ) : null}
       <View className="min-w-0 flex-row gap-3 p-4">
@@ -79,6 +84,26 @@ export default function OrganizationCard({
           </View>
         </View>
       </View>
+      {postPictures.length > 0 ? (
+        <View
+          accessibilityLabel="Ảnh từ bài viết"
+          className="flex-row gap-1 px-4 pb-4"
+        >
+          {postPictures.map((picture) => (
+            <Picture
+              key={picture.url}
+              src={picture.url}
+              width={320}
+              focus={picture.focus}
+              className="aspect-square flex-1 rounded-md"
+            />
+          ))}
+          {/* Empty slots keep each picture a quarter wide, as the web grid does. */}
+          {SLOTS.slice(postPictures.length).map((slot) => (
+            <View key={slot} className="flex-1" />
+          ))}
+        </View>
+      ) : null}
     </Pressable>
   );
 }

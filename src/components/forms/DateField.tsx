@@ -14,8 +14,8 @@ import { fromWallClock, showWallClock, toWallClock } from "./wallClock";
 
 // The native counterpart of the web <input type="date"> and
 // <input type="datetime-local">. The value is the same text the web input
-// holds ("2026-11-15" or "2026-11-15T08:30"), a Vietnam wall-clock time that
-// the shared helpers (fromLocalInput) turn into an instant.
+// holds ("2026-11-15" or "2026-11-15T08:30"), a wall-clock time in the
+// device zone that the shared helpers (fromLocalInput) turn into an instant.
 export default function DateField({
   label,
   value,

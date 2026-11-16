@@ -19,9 +19,11 @@ function commentFailure(
   );
 }
 
+// parentId answers a comment; the backend files it under the thread's root.
 export async function addComment(
   postId: string,
   text: string,
+  parentId: string | null = null,
 ): Promise<ActionResult> {
   const body = text.trim();
   const problem = validateComment(body);
@@ -29,10 +31,25 @@ export async function addComment(
   const result = await send(
     `/posts/${encodeURIComponent(postId)}/comments`,
     "POST",
-    { body },
+    parentId ? { body, parent_id: parentId } : { body },
   );
   if (!result.ok) return commentFailure(result.code, result.issues);
-  return changed({ success: "Đã gửi bình luận." });
+  return changed({
+    success: parentId ? "Đã gửi trả lời." : "Đã gửi bình luận.",
+  });
+}
+
+// Likes or takes back a like, as the web setCommentLike. The heart changes on
+// screen at once, so this does not reload the screen.
+export async function setCommentLike(
+  commentId: string,
+  liked: boolean,
+): Promise<ActionResult> {
+  const result = await send(
+    `/comments/${encodeURIComponent(commentId)}/like`,
+    liked ? "PUT" : "DELETE",
+  );
+  return failed(result);
 }
 
 // The backend allows an edit only for the author, within 15 minutes of writing.

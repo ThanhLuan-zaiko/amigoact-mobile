@@ -148,7 +148,10 @@ function MyActivities() {
               description="Các hoạt động bạn đăng ký sẽ hiện ở đây."
             />
           </View>
-          <Button icon="compass" onPress={() => router.navigate("/explore")}>
+          <Button
+            icon="compass"
+            onPress={() => router.navigate("/?tab=activities")}
+          >
             Khám phá
           </Button>
         </View>

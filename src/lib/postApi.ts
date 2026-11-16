@@ -65,6 +65,15 @@ export function getComments(postId: string, after: string | null) {
   );
 }
 
+// The replies of one top-level comment, oldest first, as on the web.
+export function getReplies(commentId: string, after: string | null) {
+  const query = new URLSearchParams({ limit: "100" });
+  if (after) query.set("after", after);
+  return read<CommentPageApi>(
+    `/comments/${encodeURIComponent(commentId)}/replies?${query}`,
+  );
+}
+
 export async function getOrgDrafts(slug: string) {
   return toPage(
     await read<PostPageApi>(`${orgPath(slug)}/post-drafts?limit=50`),

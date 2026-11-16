@@ -22,7 +22,8 @@ Trạng thái: `xong` là đã chuyển đủ luồng, trường, kiểm tra, tr
 | Cột phải trang chủ (RightRail) | hiện từ `lg` | hiện khi màn hình rộng từ 1024 điểm (máy tính bảng ngang), giống web; điện thoại không hiện |
 | Bố cục nhiều cột từ `xl` | hai, ba cột | một cột theo thứ tự của web trên điện thoại; `md:` chỉ căn giữa nội dung |
 | Menu thả xuống, hộp thoại | `details`, `dialog` | `Sheet` trượt từ dưới lên và `Modal`, phân tách bằng viền, không bóng |
-| Ô chọn ngày giờ | `input type="date"` / `datetime-local` | bộ chọn ngày giờ gốc của hệ điều hành; giá trị vẫn là chuỗi giờ Việt Nam như web (`toLocalInput`, `fromLocalInput`) |
+| Ô chọn ngày giờ | `input type="date"` / `datetime-local` | bộ chọn ngày giờ gốc của hệ điều hành; giá trị vẫn là chuỗi giờ trên đồng hồ như web (`toLocalInput`, `fromLocalInput`), đọc theo múi giờ của máy. `ZoneNote` ghi múi giờ đó như web, nhưng không cần ô ẩn `time_zone` vì app tự gửi |
+| Múi giờ người xem | cookie `tz` do trình duyệt ghi, máy chủ đọc bằng `viewerTimeZone()` (mặc định `Asia/Ho_Chi_Minh`) | múi giờ của máy qua `Intl`; gọi các hàm định dạng không truyền `timeZone`. Không có máy chủ vẽ trang nên không cần cookie |
 | Chọn tệp | `input type="file"`, kéo thả, dán ảnh | thư viện ảnh (`expo-image-picker`); không có kéo thả hay dán |
 | Tiến độ tải lên trong chat | phần trăm qua XHR | vòng xoay, vì `fetch` của React Native không báo tiến độ |
 | Video | hls.js hoặc HLS của trình duyệt, MP4 dự phòng | `expo-video` phát HLS và MP4 trực tiếp |
@@ -57,8 +58,8 @@ Trạng thái: `xong` là đã chuyển đủ luồng, trường, kiểm tra, tr
 
 | Web | Di động | Trạng thái |
 | ---- | ---- | ---- |
-| `/` (Tất cả, Tổ chức, thẻ, Tổ chức của tôi) | `src/app/index.tsx` | xong |
-| `/explore` | `src/app/explore.tsx` | xong |
+| `/` (Tất cả chỉ có bài, hoạt động nằm trong bài; Tổ chức, thẻ, Tổ chức của tôi; `?tab=activities` là danh sách hoạt động) | `src/app/index.tsx`, `ActivityDirectory` | xong. Web chỉ có một ô tìm trên header ("Tìm hoạt động, thành phố"); ở độ rộng điện thoại web hiện ô đó trong danh sách hoạt động, nên app cũng hiện `SearchField` ở đó như tab "Tổ chức". |
+| `/explore` (chuyển hướng sang `/?tab=activities`) | `src/app/explore.tsx` | xong, chuyển hướng như web, giữ `q`, `page` cho link `amigoact://explore` cũ; `city` đứng một mình được đọc như từ khóa tìm |
 | `/compose` | `src/app/compose.tsx` | xong (chuyển hướng như web) |
 | `/drafts` | `src/app/drafts.tsx` | xong |
 | `/trash` | `src/app/trash.tsx` | xong |
@@ -111,7 +112,7 @@ Trạng thái: `xong` là đã chuyển đủ luồng, trường, kiểm tra, tr
 | `/org/[slug]/posts/new` | `src/app/org/[slug]/posts/new.tsx` | xong |
 | `/org/[slug]/posts/drafts` | `src/app/org/[slug]/posts/drafts.tsx` | xong |
 | `/org/[slug]/posts/trash` | `src/app/org/[slug]/posts/trash.tsx` | xong |
-| `/org/[slug]/posts/[postId]` | `src/app/org/[slug]/posts/[postId]/index.tsx` | xong, gồm bình luận |
+| `/org/[slug]/posts/[postId]` | `src/app/org/[slug]/posts/[postId]/index.tsx`, `PostSidePanel` | xong: tab Hoạt động, Bình luận, Bài viết khác dưới bài (`?tab=`). Bình luận kiểu mạng xã hội như web (ảnh đại diện, tim, trả lời một cấp, thời gian tương đối theo múi giờ của máy); ô nhập nằm cuối danh sách thay vì dính đáy, vì màn hình là một ScrollView và bàn phím đẩy ô lên. Hàng ngắn của tổ chức nằm trên vùng cuộn (`Page` `top`), tương đương sticky trên web |
 | `/org/[slug]/posts/[postId]/edit` | `src/app/org/[slug]/posts/[postId]/edit.tsx` | xong |
 
 Trang lỗi của web (`not-found.tsx`) có bản `src/app/+not-found.tsx`; trang không tìm thấy tổ chức và hoạt động nằm trong `OrgScreen` và `ActivityScreen`.

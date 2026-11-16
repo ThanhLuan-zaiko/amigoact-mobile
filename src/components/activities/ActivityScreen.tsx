@@ -21,7 +21,7 @@ export function ActivityNotFound() {
       <Button
         variant="secondary"
         icon="compass"
-        onPress={() => router.navigate("/explore")}
+        onPress={() => router.navigate("/?tab=activities")}
       >
         Khám phá
       </Button>

@@ -15,6 +15,7 @@ import DateField from "../forms/DateField";
 import { CheckRow, InputField, TextAreaField } from "../forms/Fields";
 import FormSection from "../forms/FormSection";
 import { panel } from "../ui";
+import ZoneNote from "./ZoneNote";
 
 type TextKey = Exclude<
   keyof ActivityValues,
@@ -130,6 +131,7 @@ export default function ActivityForm({
         />
       </FormSection>
       <FormSection title="Thời gian">
+        <ZoneNote />
         {date("start_at", "Bắt đầu", true)}
         {date("end_at", "Kết thúc", true)}
         {date("registration_deadline", "Hạn đăng ký")}

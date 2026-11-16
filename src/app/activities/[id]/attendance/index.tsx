@@ -12,7 +12,7 @@ import BackTitle from "@/components/shell/BackTitle";
 import { mutedText, panel, strongText } from "@/components/ui";
 import { useLoad } from "@/hooks/useLoad";
 import type { ActionResult } from "@/lib/actionResult";
-import { formatDateTime, type Shift } from "@/lib/activities";
+import { formatDateTimeZoned, type Shift } from "@/lib/activities";
 import { type AttendanceSession, SESSION_MINUTES } from "@/lib/attendance";
 import { closeSession, getSessions, openSession } from "@/lib/attendanceApi";
 import { sessionQrUrl } from "@/lib/checkInLink";
@@ -97,7 +97,7 @@ function SessionCard({
         ) : null}
         <View className="flex-row flex-wrap gap-x-4 gap-y-1">
           <IconStat icon="clock" label="Đóng lúc">
-            {formatDateTime(session.closes_at)}
+            {formatDateTimeZoned(session.closes_at)}
           </IconStat>
           <IconStat icon="check-circle" label="Đã điểm danh">
             {session.checked_in_count}

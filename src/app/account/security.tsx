@@ -12,14 +12,9 @@ import { mutedText, panel, sectionTitle, strongText } from "@/components/ui";
 import { useLoad } from "@/hooks/useLoad";
 import { changePassword, getSessions, revokeSession } from "@/lib/accountApi";
 import type { ActionResult } from "@/lib/actionResult";
+import { formatDateTime } from "@/lib/activities";
 import { describeDevice } from "@/lib/forms";
 import { PASSWORD_HINT, passwordProblem } from "@/lib/validation";
-
-const dateFormat = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "short",
-  timeStyle: "short",
-  timeZone: "Asia/Ho_Chi_Minh",
-});
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -125,9 +120,7 @@ function SessionList() {
               </View>
               <Text className={mutedText}>
                 {session.ip ?? "Không rõ IP"} ·{" "}
-                {dateFormat.format(
-                  new Date(session.last_seen_at ?? session.created_at),
-                )}
+                {formatDateTime(session.last_seen_at ?? session.created_at)}
               </Text>
             </View>
           </View>

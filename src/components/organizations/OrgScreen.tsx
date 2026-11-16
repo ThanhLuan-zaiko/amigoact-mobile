@@ -64,18 +64,20 @@ export default function OrgScreen({
     const found = org.data.found;
     body = (
       <>
-        {short ? (
-          <ShortOrgHeader organization={found} />
-        ) : (
-          <OrgHeader organization={found} />
-        )}
+        {short ? null : <OrgHeader organization={found} />}
         {children(found, slug)}
       </>
     );
   }
+  // The short row stays in view while a post scrolls, as the web row sticks.
+  const top =
+    short && org.data?.found ? (
+      <ShortOrgHeader organization={org.data.found} />
+    ) : undefined;
 
   return (
     <Page
+      top={top}
       scroll={scroll}
       refreshing={org.refreshing}
       onRefresh={() => {

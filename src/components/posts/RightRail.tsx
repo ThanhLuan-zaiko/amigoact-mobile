@@ -2,8 +2,6 @@ import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { useLoad } from "@/hooks/useLoad";
-import { formatDateTime, seatsText } from "@/lib/activities";
-import { listPublicActivities } from "@/lib/activityApi";
 import { appPath } from "@/lib/appPath";
 import { getMyOrganizations, listOrganizations } from "@/lib/organizationApi";
 import { JOIN_POLICY_LABELS } from "@/lib/organizations";
@@ -23,7 +21,6 @@ import {
 const SUGGESTION_COUNT = 5;
 // Fetch more than are shown, because the viewer's own organizations are left out.
 const FETCH_COUNT = 20;
-const UPCOMING_COUNT = 4;
 
 function Section({
   title,
@@ -56,6 +53,8 @@ function Section({
 
 // The web RightRail of the home feed. Like the web, it shows only on wide
 // screens (lg, 1024 points), so on a phone the feed has the screen to itself.
+// Activities show inside the posts about them, so the rail holds suggested
+// organizations and popular tags, as on the web.
 export default function RightRail() {
   const { width } = useWindowDimensions();
   return width >= 1024 ? <RailBody /> : null;
@@ -63,15 +62,13 @@ export default function RightRail() {
 
 function RailBody() {
   const data = useLoad(async () => {
-    const [upcoming, page, mine, tags] = await Promise.all([
-      listPublicActivities("", "", 0, UPCOMING_COUNT),
+    const [page, mine, tags] = await Promise.all([
       listOrganizations("", 0, FETCH_COUNT),
       getMyOrganizations(),
       getPopularTags(),
     ]);
     const joined = new Set(mine.map((org) => org.id));
     return {
-      upcoming: upcoming?.items ?? [],
       suggestions: (page?.items ?? [])
         .filter((org) => !joined.has(org.id))
         .slice(0, SUGGESTION_COUNT),
@@ -80,37 +77,6 @@ function RailBody() {
   }, []);
   return (
     <View className="gap-4">
-      <Section
-        title="Sắp diễn ra"
-        link={{ href: "/explore", label: "Xem tất cả hoạt động" }}
-      >
-        {!data.data ? (
-          <Loading />
-        ) : data.data.upcoming.length === 0 ? (
-          <Text className={mutedText}>Chưa có hoạt động sắp diễn ra.</Text>
-        ) : (
-          data.data.upcoming.map((activity) => (
-            <View key={activity.id} className="min-w-0 gap-1">
-              <Pressable
-                onPress={() =>
-                  router.push(`/activities/${activity.id}` as never)
-                }
-                accessibilityRole="link"
-              >
-                <Text className={strongText}>{activity.title}</Text>
-              </Pressable>
-              <View className="flex-row flex-wrap gap-x-3 gap-y-1">
-                <IconStat icon="calendar" label="Thời gian">
-                  {formatDateTime(activity.start_at)}
-                </IconStat>
-                <IconStat icon="users" label="Số chỗ">
-                  {seatsText(activity.seats_taken, activity.capacity)}
-                </IconStat>
-              </View>
-            </View>
-          ))
-        )}
-      </Section>
       <Section
         title="Tổ chức gợi ý"
         link={{ href: "/?tab=orgs", label: "Xem tất cả tổ chức" }}

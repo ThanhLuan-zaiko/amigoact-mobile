@@ -31,11 +31,14 @@ export default function PostCard({
   actions,
   linked = true,
   manageable = true,
+  showActivity = true,
 }: {
   post: Post;
   actions?: ReactNode;
   linked?: boolean;
   manageable?: boolean;
+  // False on the post screen, where the activity has its own tab.
+  showActivity?: boolean;
 }) {
   // A draft opens its edit form. A published post opens its own screen.
   const href =
@@ -158,7 +161,9 @@ export default function PostCard({
         </View>
       ) : null}
 
-      {post.activity ? <PostActivityRow activity={post.activity} /> : null}
+      {post.activity && showActivity ? (
+        <PostActivityRow activity={post.activity} />
+      ) : null}
 
       <View className="flex-row flex-wrap items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
         {post.tags.map((tag) => (
